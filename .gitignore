@@ -1,0 +1,72 @@
+# These are some examples of commonly ignored file patterns.
+# You should customize this list as applicable to your project.
+# Learn more about .gitignore:
+#     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+
+# === Node.js ===
+node_modules/
+dist/
+
+# === Java / JVM ===
+*.class
+*.jar
+*.war
+target/
+
+# === Python ===
+*.py[cod]
+__pycache__/
+
+# === Log files ===
+*.log
+
+# === IDEs & Editor Settings ===
+.idea/
+.vscode/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# === OS-generated files ===
+.DS_Store
+Thumbs.db
+
+# === Build folders (e.g., .NET, C#) ===
+bin/
+obj/
+packages/
+
+# === Unit test reports ===
+TEST*.xml
+
+# === Setup and installer files ===
+*.exe
+!7z.exe
+*.app
+Setup/
+!vsCodeIntall/
+!vsCodeIntall/VSCode_Installer.zip
+
+# === Large media and archive files ===
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv
+*.zip
+*.7z
+*.tar
+*.gz
+*.iso
+
+# === Project-specific folders ===
+Showtime.vs/
+Director.vs/
+WatchDog.vs/
+Showtime/bin/
+WatchDog/bin/
+Director/bin/
+
