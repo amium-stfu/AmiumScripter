@@ -43,11 +43,9 @@ TEST*.xml
 
 # === Setup and installer files ===
 *.exe
-!7z.exe
+7z.exe
 *.app
 Setup/
-!vsCodeIntall/
-!vsCodeIntall/VSCode_Installer.zip
 
 # === Large media and archive files ===
 *.mp4
@@ -62,11 +60,5 @@ Setup/
 *.gz
 *.iso
 
-# === Project-specific folders ===
-Showtime.vs/
-Director.vs/
-WatchDog.vs/
-Showtime/bin/
-WatchDog/bin/
-Director/bin/
-
+!vsCodeIntall/
+!vsCodeIntall/VSCode_Installer.zip
