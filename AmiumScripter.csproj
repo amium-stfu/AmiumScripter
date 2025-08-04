@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Core\Interfaces.cs" />
     <Compile Remove="Core\ScripterCore.cs" />
   </ItemGroup>
 
@@ -19,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Documentation\" />
     <Folder Include="vsCodeIntall\" />
   </ItemGroup>
 </Project>

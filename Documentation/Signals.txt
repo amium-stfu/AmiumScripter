@@ -1,0 +1,143 @@
+## Overview: Interaction Between Signals and DataStorage
+
+### 1. Signal as a Data Object
+
+Each signal instance (e.g., `Signal`, `StringSignal`, `BoolSignal`) encapsulates:
+
+* A **unique name** (`Name`)
+* A **current value** (`Value`)
+* **Metadata** stored in `Properties` (e.g., unit, format, text)
+* An optional **WriteSet** channel to store desired target values
+
+### 2. Registration in DataStorage
+
+When a signal is created, it automatically registers itself in the central `DataStorage`:
+
+```csharp
+DataStorage.Set(Name, this);
+```
+
+This allows system-wide access to the signal instance, enabling:
+
+* Logging
+* UI visualization
+* MQTT/Bus communication
+
+### 3. Access Options
+
+Signals can be accessed and updated in two ways:
+
+**A) Directly via the instance:**
+
+```csharp
+signal.Value = 23.5;
+var current = signal.Value;
+```
+
+**B) Globally via DataStorage:**
+
+```csharp
+var signal = DataStorage.Get<Signal>("TemperatureSensor");
+signal?.Value = 42.0;
+```
+
+### 4. Update Mechanism
+
+When setting a `Value`, the following happens:
+
+* The value is saved
+* The `LastUpdate` timestamp is refreshed
+* The updated instance is written back into the `DataStorage`
+
+### 5. WriteSet for Control Purposes
+
+Signals can optionally create a `WriteSet` companion:
+
+```csharp
+signal.WriteSet.Value = 100;
+```
+
+This allows a control system (e.g., CAN/MQTT client) to:
+
+* Detect desired values
+* Compare with actual values
+
+```csharp
+if (signal.Value == signal.WriteSet.Value) {
+    // Value successfully adopted
+}
+```
+
+### 6. Signal Types
+
+#### BaseSignal
+
+* Class: `BaseSignal`
+* Type: Abstract base class (not instantiable directly)
+* Purpose: Provides common structure for all signal types
+* Properties:
+
+  * `Name`: Unique name for global access via DataStorage
+  * `LastUpdate`: Timestamp of last value update (Unix time in ms)
+  * `Properties`: Dictionary for metadata (e.g., unit, format, color)
+  * `WriteSet`: Optional reference to a signal used for desired/target value
+* Methods:
+
+  * `UpdateStorage()`: Saves current instance to DataStorage
+  * `SetProperty(key, value)`: Adds or updates a metadata entry
+  * `GetProperty(key, fallback)`: Retrieves metadata or fallback if not available
+  * `MatchesWriteSet()`: Compares `Value` with `WriteSet.Value`, returns true if they match
+  * `PropertyKeys`: Returns a list of all defined metadata keys
+  * `UpdateStorage()`: Saves current instance to DataStorage
+  * `SetProperty(key, value)`: Adds or updates a metadata entry
+  * `GetProperty(key, fallback)`: Retrieves metadata or fallback if not available
+  * `MatchesWriteSet()`: Compares value with `WriteSet.Value` (if exists)
+  * `PropertyKeys`: Enumerates defined property keys
+
+#### Signal
+
+* Class: `Signal`
+* Inherits from: `BaseSignal`
+* Value type: `double`
+* Typical use: Physical or numerical values (temperature, voltage)
+* Functions:
+
+  * `Value`: Get/set numerical value
+  * `TypedValue`: Strongly-typed value access as `double`
+  * `Unit`, `Text`, `Format`: Metadata accessors
+  * `UpdateStorage()`: Synchronizes to DataStorage
+
+#### StringSignal
+
+* Class: `StringSignal`
+* Inherits from: `BaseSignal`
+* Value type: `string`
+* Typical use: Status text, messages, identifiers
+* Functions:
+
+  * `Value`: Get/set string content
+  * `Text`: Metadata (e.g., display name)
+  * `UpdateStorage()`: Synchronizes to DataStorage
+
+#### BoolSignal
+
+* Class: `BoolSignal`
+* Inherits from: `BaseSignal`
+* Value type: `bool`
+* Typical use: Flags, switches, binary conditions
+* Functions:
+
+  * `Value`: Get/set boolean value
+  * `Text`: Metadata
+  * `UpdateStorage()`: Synchronizes to DataStorage
+
+### 7. Summary Table
+
+| Component         | Responsibility                                   |
+| ----------------- | ------------------------------------------------ |
+| `Signal`          | Holds current state and metadata                 |
+| `DataStorage`     | Central registry for all signals                 |
+| `WriteSet`        | Optional signal for desired/target value input   |
+| `UpdateStorage()` | Syncs the signal into DataStorage with timestamp |
+
+This architecture ensures that signals are globally accessible, updatable, and traceable without threading issues or duplication. It also enables clear separation between measured and desired values for feedback or control loops.

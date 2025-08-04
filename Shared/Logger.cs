@@ -10,5 +10,6 @@ namespace AmiumScripter.Shared
     public static class Logger
     {
         public static void Log(string msg) => Debug.WriteLine($"[LOG] {msg}");
+        public static void Fatal(string msg) => Debug.WriteLine($"[FTL] {msg}");
     }
 }

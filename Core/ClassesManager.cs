@@ -1,16 +1,39 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using AmiumScripter.Shared;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AmiumScripter.Core
 {
+
+    public interface IClass
+    {
+        string InstanceName { get; }
+        void Destroy();
+    }
+    [SupportedOSPlatform("windows")]
+    public abstract class ClassBase : IClass
+    {
+
+        public string InstanceName { get; init; }
+
+        protected ClassBase(string instanceName)
+        {
+            InstanceName = instanceName;
+            Logger.Log($"[ClassBase] Register {GetType().Name} ({InstanceName})");
+            ClassRuntimeManager.Register(this); // immer automatisch!
+        }
+        public abstract void Destroy();
+    }
+
     public static class ClassManager
     {
         public static void AddClass(string projectName, string className, string page = null)
@@ -63,12 +86,13 @@ namespace {nameSpace}
         public {className}(string instanceName) : base(instanceName)
         {{
             // Optional: Initialisierungscode
-            Console.WriteLine(""[{className}] Initialized with name: "" + InstanceName);
+            Logger.Log(""[Class {className}] Initialized with name: "" + InstanceName);
+    
         }}
 
         public override void Destroy()
         {{
-            Console.WriteLine(""[{className}] Destroyed: "" + InstanceName);
+             Logger.Log(""[Class {className}] Destroyed: "" + InstanceName);
         }}
     }}
 }}";

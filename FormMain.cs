@@ -1,4 +1,4 @@
-using AmiumScripter.Core;
+﻿using AmiumScripter.Core;
 using AmiumScripter.Forms;
 using System.Diagnostics;
 using System.IO;
@@ -6,9 +6,9 @@ using System.Reflection;
 
 namespace AmiumScripter
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
         }
@@ -26,13 +26,9 @@ namespace AmiumScripter
 
         private void btnOpenEditor_Click(object sender, EventArgs e)
         {
-            string vscodePath = @"C:\Users\StefanFunk\AppData\Local\Programs\Microsoft VS Code\Code.exe";
-            string projectPath = ProjectManager.GetProjectPath("MeinModulProjekt");
-            Debug.WriteLine("project : '" + projectPath + "'");
-
-            Process.Start(vscodePath, $"\"{projectPath}\"");
-
+            ProjectManager.OpenEditor();
         }
+
 
 
         private void btnAddProject_Click(object sender, EventArgs e)
@@ -60,6 +56,30 @@ namespace AmiumScripter
             FormCodeEditor editor = new FormCodeEditor();
             editor.Show();
             string uri = ProjectManager.GetProjectPath(ProjectManager.Project.Name);
+        }
+
+        private void btnLoad_Click(object sender, EventArgs e)
+        {
+            ProjectManager.ProjectBrowser();
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            ProjectManager.SaveProject(ProjectManager.Project);
+        }
+
+        private void btnAddSignal_Click(object sender, EventArgs e)
+        {
+            UIEditor.AddSignalControl(
+            name: "MotorTemp",
+            page: "TestPage",
+            source: "Motor.Temperature" // SourceName im SignalView
+);
+        }
+
+        private void btnBuildUi_Click(object sender, EventArgs e)
+        {
+            UIEditor.CreateAllViews();
         }
     }
 

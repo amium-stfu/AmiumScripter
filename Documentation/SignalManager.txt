@@ -1,0 +1,80 @@
+**SignalManager - Overview and Functionality**
+
+The `SignalManager` is a central utility responsible for safely updating signal values and properties in the application. It acts as a controlled gateway to the `DataStorage`, ensuring thread safety, update consistency, and optional real-time responsiveness.
+
+---
+
+### Core Responsibilities
+
+* **Queue-based signal updates** for asynchronous processing.
+* **Immediate value assignment** for real-time updates.
+* **Property modification** for metadata like unit, format, color, etc.
+* **Avoids creating new signal instances**, instead directly updates existing ones.
+
+---
+
+### Key Features
+
+#### `QueueSet(string name, object value)`
+
+* Enqueues a signal value update.
+* Non-blocking, optimized for high-throughput data sources (e.g. CAN, MQTT).
+* The update is later applied during the periodic `ProcessQueue` call.
+
+#### `SetImmediate(string name, object value)`
+
+* Instantly updates the `.Value` property of an existing `BaseSignal`.
+* Does **not** replace or recreate the signal – only the value is changed.
+* Fires the `OnSignalUpdated` callback, if assigned.
+* Typical use case:
+
+```csharp
+SignalManager.SetImmediate("battery.voltage", 12.3);
+```
+
+#### `SetProperty(string name, string key, object? value)`
+
+* Updates or removes a property of an existing signal.
+* Calls `SetProperty()` on the signal instance, which handles updating and writing to storage.
+
+```csharp
+SignalManager.SetProperty("battery.voltage", "unit", "V");
+```
+
+#### `ProcessQueue()`
+
+* Runs automatically on a timer (every 10 ms by default).
+* Processes up to 100 queued value updates per tick.
+* Internally calls `SetImmediate(...)` for each dequeued entry.
+
+#### `OnSignalUpdated` (Action\<string, BaseSignal>)
+
+* Optional event callback that is invoked every time a signal value is updated via `SetImmediate` or `ProcessQueue`.
+* Useful for monitoring, logging, or triggering UI updates.
+
+---
+
+### Design Principles
+
+* **Data consistency**: All updates pass through `BaseSignal.Value`, which ensures timestamping and optional `WriteSet` support.
+* **Thread safety**: Uses `ConcurrentQueue` and atomic operations.
+* **No duplication**: Signals must exist in `DataStorage`; the manager will only modify them, never recreate.
+
+---
+
+### Usage Example
+
+```csharp
+// Update a value asynchronously
+SignalManager.QueueSet("sensor1.temp", 23.4);
+
+// Update a value immediately
+SignalManager.SetImmediate("motor.speed", 1500);
+
+// Change a property (unit)
+SignalManager.SetProperty("motor.speed", "unit", "rpm");
+```
+
+---
+
+The `SignalManager` is the recommended interface for modifying signal state within the system. It separates real-time data flow from internal signal logic and ensures all signals are updated safely and consistently.

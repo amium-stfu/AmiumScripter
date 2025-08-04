@@ -1,0 +1,58 @@
+## StorageItem Class
+
+### Overview
+
+The `StorageItem` class represents a container object that stores a value along with its metadata and timestamp. It is often used as a general-purpose wrapper in the signal system.
+
+### Properties
+
+* **Name**: `string`
+  Unique identifier for the item.
+
+* **Type**: `string`
+  A string label indicating the logical type of the value (e.g., "double", "string").
+
+* **LastUpdate**: `ulong`
+  The timestamp of the last update in milliseconds since Unix epoch (UTC).
+
+* **Value**: `object`
+  The value stored in this item. Can be any type.
+
+* **Attribute**: `Dictionary<string, object>`
+  A dictionary for holding user-defined metadata (e.g., unit, formatting info).
+
+### Methods
+
+* **GetValue<T>()**: `T?`
+  Returns the stored value casted to type `T`, or the default of `T` if the cast fails.
+
+---
+
+## DataStorage Class
+
+### Overview
+
+The `DataStorage` class is a static, thread-safe registry used to store and retrieve signal-related data and objects by unique keys.
+
+### Features
+
+* Global access point for all signal instances
+* Optimized for concurrent usage using `ConcurrentDictionary`
+* Supports typed and untyped data access
+
+### Methods
+
+* **Set(string key, object value)**
+  Stores or updates an entry with the given key.
+
+* **Get<T>(string key)**: `T?`
+  Retrieves the object associated with the key and attempts to cast it to type `T`.
+
+* **TryGet(string key, out object value)**: `bool`
+  Attempts to retrieve a value by key. Returns `true` if found.
+
+* **Snapshot()**: `IReadOnlyDictionary<string, object>`
+  Returns a shallow copy of all stored entries.
+
+* **Keys**: `IEnumerable<string>`
+  Enumerates all keys currently registered in the storage.
