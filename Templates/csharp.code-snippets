@@ -1,0 +1,45 @@
+{
+  "$schema": "vscode://schemas/snippets",
+  "scope": "csharp",
+
+  "Signal field": {
+    "prefix": "_Signal",
+    "description": "Signal-Feld mit Initialisierung",
+    "body": [
+      "public Signal ${1:SigName} = new(name: \"${2:sigName}\", text: \"${3:MyName}\", unit: \"${4:}\", format: \"${5:0.000}\", value: ${6:double.NaN});"
+    ]
+  },
+
+  "StringSignal field": {
+    "prefix": "_StringSignal",
+    "description": "StringSignal-Feld mit Initialisierung",
+    "body": [
+      "public StringSignal ${1:SigName} = new(name: \"${2:sigName}\", text: \"${3:MyText}\");"
+    ]
+  },
+
+  "BoolSignal field": {
+    "prefix": "_BoolSignal",
+    "description": "BoolSignal-Feld mit Initialisierung",
+    "body": [
+      "public BoolSignal ${1:SigName} = new(name: \"${2:sigName}\", text: \"${3:MyText}\");"
+    ]
+  },
+
+  "Module field": {
+    "prefix": "_Module",
+    "description": "Module-Feld mit Initialisierung",
+    "body": [
+      "public Module ${1:ModuleName} = new(name: \"${2:moduleName}\", text: \"${3:MyModule}\", unit: \"${4:}\", format: \"${5:0.000}\");"
+    ]
+  },
+  "AThread Initialisierung": {
+  "prefix": "_AThread",
+  "description": "Erzeugt eine neue AThread-Instanz mit Hintergrundoption",
+  "body": [
+    "AThread ${1:Name} = new AThread(instanceName: \"${2:MyThread}\", work: () => ${3:MyMethod}(), isBackground: ${4:true});"
+  ]
+}
+
+  
+}

@@ -16,7 +16,6 @@ namespace AmiumScripter.Core
 {
     public static class UIEditor
     {
-
         public static string CurrentPageName { get; set; } = "TestPage";
 
         public static Dictionary<string, BaseView> PageView = new();
@@ -26,130 +25,9 @@ namespace AmiumScripter.Core
         {
             Debug.WriteLine("[UIEditor] Start creative pageviews");
             Debug.WriteLine("[UIEditor] qty of pages " + PageView.Count);
-      
             AttachPagesViewToUI();
         }
 
-
-        public static void BuildPageViewWithCompilation(string pageName)
-        {
-            var projectPath = ProjectManager.GetProjectPath(ProjectManager.Project.Name);
-            var pagePath = Path.Combine(projectPath, "Pages", pageName, pageName + ".cs");
-            var viewPath = Path.Combine(projectPath, "Pages", pageName, "View.cs");
-            var controlsPath = Path.Combine(projectPath, "Pages", pageName, "Controls.cs");
-            string classesPath = Path.Combine(projectPath, "Pages", pageName, "Classes");
-
-            if (!File.Exists(viewPath))
-            {
-                Debug.WriteLine($"❌ View.cs nicht gefunden: {viewPath}");
-                return;
-            }
-
-            var syntaxTrees = new List<SyntaxTree>
-    {
-        CSharpSyntaxTree.ParseText(File.ReadAllText(viewPath))
-    };
-
-            string projectCs = Path.Combine(projectPath, "project.cs");
-
-            if (File.Exists(pagePath))
-            {
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(pagePath), path: pagePath));
-                Debug.WriteLine("[UIExploroer] Add Buildfile: " + pagePath);
-            }
-            else
-            {
-                Debug.WriteLine("Project.cs not found:" + projectCs);
-            }
-
-
-
-            if (File.Exists(projectCs))
-            {
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(projectCs), path: projectCs));
-                Debug.WriteLine("Add file: " + projectCs);
-            }
-            else
-            {
-                Debug.WriteLine("Project.cs not found:" + projectCs);
-            }
-
-
-            if (Directory.Exists(classesPath))
-            {
-                foreach (var file in Directory.GetFiles(classesPath, "*.cs"))
-                    syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(file)));
-            }
-
-
-            if (File.Exists(controlsPath))
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(File.ReadAllText(controlsPath)));
-
-            // Referenzen: Framework + dein eigenes Projekt
-            var trustedAssemblies = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))?.Split(Path.PathSeparator) ?? Array.Empty<string>();
-            var refNames = new[]
-{
-    "System.Private.CoreLib",
-    "System.Runtime",
-    "System.Console",
-    "System.Linq",
-    "System.Drawing",
-    "System.Drawing.Primitives",  // ✅ HINZUGEFÜGT
-    "System.Windows.Forms",
-    "System.Text.Json",
-    "System.Text.RegularExpressions",
-    "System.Private.Uri",
-    "netstandard",
-    "System.Collections",
-    "System.IO",
-    "System.Private.Xml",
-    "System.Private.Xml.Linq",
-    "System.ComponentModel.Primitives",
-    "System.ComponentModel.TypeConverter",
-    "System.Runtime.Extensions",
-    "System.ObjectModel",
-    "System.Linq.Expressions",
-    "System.Memory"
-};
-
-            var references = trustedAssemblies
-                .Where(p => refNames.Any(r => Path.GetFileNameWithoutExtension(p).Equals(r, StringComparison.OrdinalIgnoreCase)))
-                .Select(p => MetadataReference.CreateFromFile(p))
-                .ToList();
-
-            references.Add(MetadataReference.CreateFromFile(typeof(BaseView).Assembly.Location)); // dein Projektcode (z. B. IView, BaseView)
-
-            var compilation = CSharpCompilation.Create(
-                $"ViewAssembly_{pageName}",
-                syntaxTrees,
-                references,
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-            );
-
-            using var ms = new MemoryStream();
-            var result = compilation.Emit(ms);
-
-            if (!result.Success)
-            {
-                Debug.WriteLine("❌ Fehler beim Kompilieren von View.cs:");
-                foreach (var diag in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
-                    Debug.WriteLine("  ➤ " + diag);
-                return;
-            }
-
-            ms.Seek(0, SeekOrigin.Begin);
-            var assembly = Assembly.Load(ms.ToArray());
-
-            // View-Typ laden
-            var fullTypeName = $"AmiumScripter.Pages.{pageName}.View";
-            var viewType = assembly.GetType(fullTypeName);
-            if (viewType == null || !typeof(BaseView).IsAssignableFrom(viewType))
-            {
-                Debug.WriteLine($"❌ View-Klasse '{fullTypeName}' nicht gefunden oder ungültig.");
-                return;
-            }
-            PageView[pageName] = Activator.CreateInstance(viewType) as BaseView;
-        }
 
         public static TabControl TabControlHost { get; set; } = AmiumScripter.Root.Main.Book;
 
@@ -163,7 +41,7 @@ namespace AmiumScripter.Core
 
         public static void AttachPagesViewToUI()
         {
-
+            CurrentPageName = null;
             Debug.WriteLine("[UIEditor] Try to Add PageViews");
             AmiumScripter.Root.Main.Book.TabPages.Clear();
 
@@ -175,10 +53,14 @@ namespace AmiumScripter.Core
                 view.Value.BackColor = Color.White;
 
                 var tabPage = new TabPage(view.Key);
+                tabPage.Name = view.Key;
+                CurrentPageName??= tabPage.Name;
                 tabPage.Controls.Add(view.Value);
                 AmiumScripter.Root.Main.Book.TabPages.Add(tabPage);
 
             }
+
+           // MessageBox.Show($"Aktuelle Seite: {UIEditor.CurrentPageName}");
         }
 
         //BuildView End
@@ -197,6 +79,8 @@ namespace AmiumScripter.Core
 
             bool insideDeclBlock = false;
             bool insideInitBlock = false;
+            bool controlAddedToDecl = false;
+            bool controlAddedToInit = false;
 
             foreach (var line in originalLines)
             {
@@ -204,12 +88,23 @@ namespace AmiumScripter.Core
                 {
                     insideDeclBlock = true;
                     output.Add(line);
-                    output.Add($"        public static SignalView {controlName};");
                     continue;
                 }
                 if (line.Contains(endDeclTag))
                 {
+                    // Add new control declaration before closing tag, if not already present
+                    if (!originalLines.Any(l => l.Contains($"public static SignalView {controlName};")))
+                    {
+                        output.Add($"        public static SignalView {controlName};");
+                    }
                     insideDeclBlock = false;
+                    output.Add(line);
+                    continue;
+                }
+
+                if (insideDeclBlock)
+                {
+                    // Keep existing declarations
                     output.Add(line);
                     continue;
                 }
@@ -218,28 +113,36 @@ namespace AmiumScripter.Core
                 {
                     insideInitBlock = true;
                     output.Add(line);
-
-                    // Init block
-                    output.Add($"            {controlName} = new SignalView");
-                    output.Add("            {");
-                    foreach (var ctrlLine in controlInitLines)
-                        output.Add("                " + ctrlLine);
-                    output.Add("            };");
-                    output.Add($"            parent.Controls.Add({controlName});");
-                    output.Add($"            Logger.Log(\"[PageControls] Creating instance of SignalView  {controlName}\");");
-                    output.Add("            // ----");
                     continue;
                 }
 
                 if (line.Contains(endInitTag))
                 {
+                    // Add new control initialization before closing tag, if not already present
+                    if (!originalLines.Any(l => l.Contains($"{controlName} = new SignalView")))
+                    {
+                        output.Add($"            {controlName} = new SignalView");
+                        output.Add("            {");
+                        foreach (var ctrlLine in controlInitLines)
+                            output.Add("                " + ctrlLine);
+                        output.Add("            };");
+                        output.Add($"            parent.Controls.Add({controlName});");
+                        output.Add($"            Logger.Log(\"[PageControls] Creating instance of SignalView  {controlName}\");");
+                        output.Add("            // ----");
+                    }
                     insideInitBlock = false;
                     output.Add(line);
                     continue;
                 }
 
-                if (!insideDeclBlock && !insideInitBlock)
+                if (insideInitBlock)
+                {
+                    // Keep existing initializations
                     output.Add(line);
+                    continue;
+                }
+
+                output.Add(line);
             }
 
             File.WriteAllLines(filePath, output);
@@ -338,7 +241,7 @@ namespace AmiumScripter.Core
             //}
 
             var controlLines = AddSignalControlLines(name, source);
-            var filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "Pages", page, "Controls.cs");
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
             UpdateControlsCs(filePath, controlLines, name);
         }
 
@@ -366,7 +269,7 @@ namespace AmiumScripter.Core
             Debug.WriteLine("Update Control " + controlName);
             Debug.WriteLine("X " + x);            
             Debug.WriteLine("Y " + y);
-            var filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "Pages", page, "Controls.cs");
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
             if (!File.Exists(filePath))
             {
                 Debug.WriteLine("File not found");

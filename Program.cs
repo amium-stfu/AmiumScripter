@@ -1,4 +1,5 @@
 using AmiumScripter.Core;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography.X509Certificates;
@@ -20,8 +21,11 @@ namespace AmiumScripter
         [STAThread]
         public static void Main()
         {
+            Debug.WriteLine("Cleaning up temp folders...");
+            Cleanup.DeleteProjectTempFolders();
+            Debug.WriteLine("Cleanup complete.");
 
-            // >>> Start der eigentlichen App
+
             ApplicationConfiguration.Initialize();
             Application.Run(Root.Main = new FormMain());
         }

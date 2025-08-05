@@ -1,4 +1,5 @@
-﻿using AmiumScripter.Modules;
+﻿using AmiumScripter.Controls;
+using AmiumScripter.Modules;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -44,13 +45,14 @@ namespace AmiumScripter.Core
                 _values[key] = value;
                 Debug.WriteLine("Add Signal " + key);
                 SignalPoolCsGenerator.ScheduleUpdate();
-              
+
             }
             else
             {
                 Debug.WriteLine("Update Signal " + key);
                 _values[key] = value;
             }
+            ControlManager.SignalUpdated(key);
         }
         public static T? Get<T>(string key)
         {
@@ -73,6 +75,8 @@ namespace AmiumScripter.Core
         public static IEnumerable<string> Keys => _values.Keys;
 
     }
+
+
     internal static class SignalPoolCsGenerator
     {
         private static System.Threading.Timer? _delayTimer;
@@ -138,7 +142,7 @@ namespace AmiumScripter.Core
 
             sb.AppendLine("}");
 
-            string path = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name),"Shared", "SignalPool.cs");
+            string path = Path.Combine(ProjectManager.Project.Workspace,"Shared", "SignalPool.cs");
             Debug.WriteLine($"Writing SignalPool.cs to: {path}");
             try
             {
@@ -166,7 +170,9 @@ namespace AmiumScripter.Core
 
         public static void SaveToXml()
         {
-            string filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "DataStorage.xml");
+           // string filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "DataStorage.xml");
+
+            string filePath = Path.Combine(ProjectManager.Project.Workspace, "DataStorage.xml");
 
             var allSignals = new List<BaseSignal>();
 

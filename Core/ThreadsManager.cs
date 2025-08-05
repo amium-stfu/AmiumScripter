@@ -27,15 +27,19 @@ public class AThread
         _thread.IsBackground = isBackground;
 
         ThreadsManager.Register(this);
-        Logger.Log($"[AThread] Registered: {InstanceName}");
+        Logger.Log($"[AThread] {InstanceName}: Registered");
     }
 
     public void Start()
     {
-        if (_thread.ThreadState == ThreadState.Unstarted)
+        Logger.Log($"[AThread] {InstanceName}: Try to start");
+        if (!IsRunning)
         {
             _thread.Start();
-            Logger.Log($"[AThread] Started: {InstanceName}");
+            Logger.Log($"[AThread] {InstanceName}: Started");
+        }
+        else { 
+            Logger.Log($"[AThread] {InstanceName}: ThreadState {_thread.ThreadState.ToString()} ");
         }
     }
 
@@ -87,9 +91,9 @@ public static class ThreadsManager
     {
         lock (_threads)
         {
-            foreach (var thread in _threads)
+            foreach (var thread in _threads.ToList()) // Kopie!
             {
-                thread.Stop(); // interne Prüfung + Join
+                thread.Stop();
             }
             _threads.Clear();
         }

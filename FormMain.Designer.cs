@@ -34,17 +34,21 @@
             button4 = new Button();
             tableLayoutPanel1 = new TableLayoutPanel();
             panel1 = new Panel();
+            btnSaveAs = new Button();
             btnSave = new Button();
             btnLoad = new Button();
             btnStop = new Button();
             btnRun = new Button();
             btnBuild = new Button();
             Book = new TabControl();
+            tabPage1 = new TabPage();
+            tabPage2 = new TabPage();
             panel2 = new Panel();
             btnAddSignal = new Button();
-            btnBuildUi = new Button();
+            btnAddDll = new Button();
             tableLayoutPanel1.SuspendLayout();
             panel1.SuspendLayout();
+            Book.SuspendLayout();
             panel2.SuspendLayout();
             SuspendLayout();
             // 
@@ -84,7 +88,7 @@
             // button4
             // 
             button4.Dock = DockStyle.Bottom;
-            button4.Location = new Point(0, 526);
+            button4.Location = new Point(0, 653);
             button4.Name = "button4";
             button4.Size = new Size(207, 24);
             button4.TabIndex = 4;
@@ -107,12 +111,13 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableLayoutPanel1.Size = new Size(1092, 606);
+            tableLayoutPanel1.Size = new Size(1202, 733);
             tableLayoutPanel1.TabIndex = 5;
             // 
             // panel1
             // 
-            panel1.Controls.Add(btnBuildUi);
+            panel1.Controls.Add(btnAddDll);
+            panel1.Controls.Add(btnSaveAs);
             panel1.Controls.Add(btnSave);
             panel1.Controls.Add(btnLoad);
             panel1.Controls.Add(btnStop);
@@ -124,8 +129,19 @@
             panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(3, 3);
             panel1.Name = "panel1";
-            panel1.Size = new Size(873, 24);
+            panel1.Size = new Size(983, 24);
             panel1.TabIndex = 0;
+            // 
+            // btnSaveAs
+            // 
+            btnSaveAs.Dock = DockStyle.Left;
+            btnSaveAs.Location = new Point(600, 0);
+            btnSaveAs.Name = "btnSaveAs";
+            btnSaveAs.Size = new Size(75, 24);
+            btnSaveAs.TabIndex = 12;
+            btnSaveAs.Text = "SaveAs";
+            btnSaveAs.UseVisualStyleBackColor = true;
+            btnSaveAs.Click += btnSaveAs_Click;
             // 
             // btnSave
             // 
@@ -184,22 +200,45 @@
             // 
             // Book
             // 
+            Book.Controls.Add(tabPage1);
+            Book.Controls.Add(tabPage2);
             Book.Dock = DockStyle.Fill;
             Book.Location = new Point(3, 33);
             Book.Multiline = true;
             Book.Name = "Book";
             Book.SelectedIndex = 0;
-            Book.Size = new Size(873, 550);
+            Book.Size = new Size(983, 677);
             Book.TabIndex = 1;
+            Book.SelectedIndexChanged += Book_SelectedIndexChanged;
+            // 
+            // tabPage1
+            // 
+            tabPage1.Location = new Point(4, 24);
+            tabPage1.Name = "tabPage1";
+            tabPage1.Padding = new Padding(3);
+            tabPage1.Size = new Size(975, 649);
+            tabPage1.TabIndex = 0;
+            tabPage1.Text = "tabPage1";
+            tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // tabPage2
+            // 
+            tabPage2.Location = new Point(4, 24);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new Padding(3);
+            tabPage2.Size = new Size(975, 649);
+            tabPage2.TabIndex = 1;
+            tabPage2.Text = "tabPage2";
+            tabPage2.UseVisualStyleBackColor = true;
             // 
             // panel2
             // 
             panel2.Controls.Add(btnAddSignal);
             panel2.Controls.Add(button4);
             panel2.Dock = DockStyle.Fill;
-            panel2.Location = new Point(882, 33);
+            panel2.Location = new Point(992, 33);
             panel2.Name = "panel2";
-            panel2.Size = new Size(207, 550);
+            panel2.Size = new Size(207, 677);
             panel2.TabIndex = 2;
             // 
             // btnAddSignal
@@ -213,27 +252,28 @@
             btnAddSignal.UseVisualStyleBackColor = true;
             btnAddSignal.Click += btnAddSignal_Click;
             // 
-            // btnBuildUi
+            // btnAddDll
             // 
-            btnBuildUi.Dock = DockStyle.Left;
-            btnBuildUi.Location = new Point(600, 0);
-            btnBuildUi.Name = "btnBuildUi";
-            btnBuildUi.Size = new Size(75, 24);
-            btnBuildUi.TabIndex = 12;
-            btnBuildUi.Text = "Build UI";
-            btnBuildUi.UseVisualStyleBackColor = true;
-            btnBuildUi.Click += btnBuildUi_Click;
+            btnAddDll.Dock = DockStyle.Left;
+            btnAddDll.Location = new Point(675, 0);
+            btnAddDll.Name = "btnAddDll";
+            btnAddDll.Size = new Size(75, 24);
+            btnAddDll.TabIndex = 13;
+            btnAddDll.Text = "Add dll";
+            btnAddDll.UseVisualStyleBackColor = true;
+            btnAddDll.Click += btnAddDll_Click;
             // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1092, 606);
+            ClientSize = new Size(1202, 733);
             Controls.Add(tableLayoutPanel1);
             Name = "FormMain";
             Text = "Form1";
             tableLayoutPanel1.ResumeLayout(false);
             panel1.ResumeLayout(false);
+            Book.ResumeLayout(false);
             panel2.ResumeLayout(false);
             ResumeLayout(false);
         }
@@ -254,6 +294,9 @@
         private Panel panel2;
         private Button btnAddSignal;
         public TabControl Book;
-        private Button btnBuildUi;
+        private Button btnSaveAs;
+        private TabPage tabPage1;
+        private TabPage tabPage2;
+        private Button btnAddDll;
     }
 }

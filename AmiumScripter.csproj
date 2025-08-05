@@ -21,6 +21,11 @@
 
   <ItemGroup>
     <Folder Include="Documentation\" />
+    <Folder Include="Templates\" />
     <Folder Include="vsCodeIntall\" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="xcopy &quot;$(ProjectDir)Templates\*.*&quot; &quot;$(TargetDir)Templates\&quot; /Y /I /E&#xD;&#xA;" />
+  </Target>
 </Project>

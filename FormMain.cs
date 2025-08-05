@@ -13,15 +13,17 @@ namespace AmiumScripter
             InitializeComponent();
         }
 
+        int dummyPageCounter = 0;
         private void btnAddClass_Click(object sender, EventArgs e)
         {
-            ClassManager.AddClass("MeinModulProjekt", "TestModule");
-
+            ClassManager.AddClass(ProjectManager.Project.Name, "TestModule");
+            dummyPageCounter = 0;
         }
 
         private void btnAddPage_Click(object sender, EventArgs e)
         {
-            PageManager.AddPage("MeinModulProjekt", "TestPage");
+            dummyPageCounter++;
+            PageManager.AddPage(ProjectManager.Project.Name, $"Page{dummyPageCounter}");
         }
 
         private void btnOpenEditor_Click(object sender, EventArgs e)
@@ -33,7 +35,10 @@ namespace AmiumScripter
 
         private void btnAddProject_Click(object sender, EventArgs e)
         {
-            ProjectManager.CreateProject("MeinModulProjekt");
+            dummyPageCounter = 0;
+            dummySignalCounter = 0;
+            string dummy = DateTime.Now.ToString("yyyyMMddHHmmss");
+            ProjectManager.CreateProject("MeinModulProjekt_" + dummy);
         }
 
         private void btnBuild_Click(object sender, EventArgs e)
@@ -60,26 +65,48 @@ namespace AmiumScripter
 
         private void btnLoad_Click(object sender, EventArgs e)
         {
-            ProjectManager.ProjectBrowser();
+            // ProjectManager.ProjectBrowser();
+
+            ProjectManager.LoadFromAScript();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            ProjectManager.SaveProject(ProjectManager.Project);
+            //ProjectManager.SaveProject(ProjectManager.Project);
+            ProjectManager.Save();
         }
 
+        int dummySignalCounter = 0;
         private void btnAddSignal_Click(object sender, EventArgs e)
         {
             UIEditor.AddSignalControl(
-            name: "MotorTemp",
-            page: "TestPage",
+            name: $"Dummy{dummySignalCounter}",
+            page: UIEditor.CurrentPageName,
             source: "Motor.Temperature" // SourceName im SignalView
 );
+            dummySignalCounter++;
         }
 
-        private void btnBuildUi_Click(object sender, EventArgs e)
+
+
+        private void Book_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UIEditor.CreateAllViews();
+            var tabControl = sender as TabControl;
+            if (tabControl?.SelectedTab != null)
+            {
+                UIEditor.CurrentPageName = tabControl.SelectedTab.Name;
+                //   MessageBox.Show($"Aktuelle Seite: {UIEditor.CurrentPageName}");
+            }
+        }
+
+        private void btnSaveAs_Click(object sender, EventArgs e)
+        {
+            ProjectManager.SaveAs();
+        }
+
+        private void btnAddDll_Click(object sender, EventArgs e)
+        {
+            ProjectManager.AddDllFile();
         }
     }
 

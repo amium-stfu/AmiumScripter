@@ -5,6 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
@@ -12,6 +14,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace AmiumScripter.Core
 {
@@ -36,6 +40,8 @@ namespace AmiumScripter.Core
     {
         public string Name { get; set; }
         public string Autor { get; set; }
+        public string Uri { get; set; }
+        public string Workspace { get; set; }
         public DateTime Erstellt { get; set; }
 
         public List<ModuleData> Modules { get; set; } = new();
@@ -90,10 +96,17 @@ namespace AmiumScripter.Core
   ""editor.tabSize"": 4,
   ""editor.insertSpaces"": true,
   ""editor.detectIndentation"": false,
-  ""editor.wordWrap"": ""on""
-}";
+  ""editor.wordWrap"": ""on"",
 
-            string path = GetProjectPath(projectName);
+  ""window.restoreWindows"": ""none"",
+  ""window.openFoldersInNewWindow"": ""on""
+
+}";
+            string path = Path.Combine(Path.GetTempPath(), "Project_" + projectName + "_" + Guid.NewGuid());
+            //  string tempDir = Path.Combine(Path.GetTempPath(), "Project_" + name);
+            Directory.CreateDirectory(path);
+
+          //  string path = GetProjectPath(projectName);
             Directory.CreateDirectory(path);
             Directory.CreateDirectory(Path.Combine(path,".vscode"));
             Directory.CreateDirectory(Path.Combine(path, "dlls"));
@@ -105,6 +118,14 @@ namespace AmiumScripter.Core
             SignalPoolCsGenerator.ScheduleUpdate();
 
             File.WriteAllText(Path.Combine(path, ".vscode","settings.json"), vsSetting);
+
+            string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "csharp.code-snippets");
+            string targetPath = Path.Combine(Path.Combine(path, ".vscode"), "csharp.code-snippets");
+          
+            
+            File.Copy(sourcePath, targetPath, overwrite: true);
+
+
 
             string dummyClass = $@"
 namespace AmiumScripter.Shared.Classes
@@ -119,42 +140,16 @@ namespace AmiumScripter.Shared.Classes
 
             Project = new ProjectData(projectName)
             {
-                Autor = Environment.UserName
+                Autor = Environment.UserName,
+                Workspace = path,
+
             };
 
             SaveProject(Project);
             ProjectBuilder.GenerateDynamicProjectFile(path, projectName);
             MessageBox.Show($"📁 Projekt '{projectName}' mit Referenzen angelegt: {path}");
         }
-        public static void ProjectBrowser()
-        {
-            string basePath = AppDomain.CurrentDomain.BaseDirectory;
-            string projectsRoot = Path.Combine(basePath, "Projects");
-
-            using var dialog = new FolderBrowserDialog
-            {
-                Description = "Projektverzeichnis auswählen",
-                SelectedPath = projectsRoot,
-                ShowNewFolderButton = false
-            };
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                string selectedPath = dialog.SelectedPath;
-                string projectName = Path.GetFileName(selectedPath);
-                var project = LoadProject(projectName);
-
-                if (project != null)
-                {
-                    Project = project;
-                    MessageBox.Show($"📂 Projekt '{projectName}' wurde geladen.");
-                }
-                else
-                {
-                    MessageBox.Show($"❌ Projektdatei konnte nicht geladen werden: {selectedPath}");
-                }
-            }
-        }
+ 
         public static ProjectData? LoadProject(string projectName)
         {
             string path = Path.Combine(GetProjectPath(projectName), "project.json");
@@ -165,9 +160,86 @@ namespace AmiumScripter.Shared.Classes
             return JsonSerializer.Deserialize<ProjectData>(json);
             
         }
+
+        public static void AddDllFile() { 
+            using var dialog = new OpenFileDialog
+            {
+                Filter = "DLL-File (*.dll)|*.dll",
+                Title = "Select dll-file"
+            };
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                string dllPath = dialog.FileName;
+                string targetDir = Path.Combine(Project.Workspace, "dlls");
+                Directory.CreateDirectory(targetDir);
+                string targetPath = Path.Combine(targetDir, Path.GetFileName(dllPath));
+                try
+                {
+                    File.Copy(dllPath, targetPath, overwrite: true);
+                   // MessageBox.Show($"DLL erfolgreich hinzugefügt: {targetPath}");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to add dlls: {ex.Message}");
+                }
+            }
+        }
+
+
+
+        public static void LoadFromAScript()
+        {
+            using var dialog = new OpenFileDialog
+            {
+                Filter = "Amium Script (*.AScript)|*.AScript",
+                Title = "Open AmiumScript File"
+            };
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                string name = Path.GetFileNameWithoutExtension(dialog.FileName);
+
+                string tempDir = Path.Combine(Path.GetTempPath(), "Project_" + name + "_" + Guid.NewGuid());
+              //  string tempDir = Path.Combine(Path.GetTempPath(), "Project_" + name);
+                Directory.CreateDirectory(tempDir);
+
+
+                try
+                {
+                    ZipFile.ExtractToDirectory(dialog.FileName, tempDir);
+
+
+                    string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "csharp.code-snippets");
+                    string targetPath = Path.Combine(Path.Combine(tempDir, ".vscode"), "csharp.code-snippets");
+                    File.Copy(sourcePath, targetPath, overwrite: true);
+
+                    string projectJson = Path.Combine(tempDir, "project.json");
+                    if (File.Exists(projectJson))
+                    {
+                        var project = JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(projectJson));
+                        Project = project;
+                        Project.Workspace = tempDir; // Setze Workspace auf tempDir
+                        MessageBox.Show($"Projekt geladen: {Project.Name}");
+                    }
+                    else
+                    {
+                        MessageBox.Show("project.json nicht gefunden!");
+                    }
+                    // Editor kann jetzt auf tempDir zugreifen
+                    // z.B.: OpenEditor(tempDir);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Fehler beim Entpacken: {ex.Message}");
+                }
+            }
+        }
         public static void SaveProject(ProjectData project)
         {
-            string path = GetProjectPath(project.Name);
+           // string path = GetProjectPath(project.Name);
+
+           string path = project.Workspace;
+
             Directory.CreateDirectory(path);
 
             string jsonPath = Path.Combine(path, "project.json");
@@ -175,6 +247,74 @@ namespace AmiumScripter.Shared.Classes
             File.WriteAllText(jsonPath, json);
             SignalStorageSerializer.SaveToXml();
         }
+
+        public static void SaveAs()
+        {
+            if (Project == null)
+            {
+                MessageBox.Show("Kein Projekt geladen.");
+                return;
+            }
+
+            using var dialog = new SaveFileDialog
+            {
+                Filter = "Amium Script (*.AScript)|*.AScript",
+                DefaultExt = "AScript",
+                FileName = Project.Name + ".AScript",
+                Title = "Projekt speichern als"
+            };
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                SaveProject(Project);
+                string projectPath = GetProjectPath(Project.Name);
+                string targetFile = dialog.FileName;
+                Project.Uri = targetFile;
+
+                try
+                {
+                    if (File.Exists(targetFile))
+                        File.Delete(targetFile);
+
+                    ZipFile.CreateFromDirectory(projectPath, targetFile, CompressionLevel.Optimal, includeBaseDirectory: false);
+
+                    MessageBox.Show($"Projekt erfolgreich gespeichert: {targetFile}");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Fehler beim Speichern: {ex.Message}");
+                }
+            }
+        }
+
+        public static void Save()
+        {
+            if (Project == null || string.IsNullOrWhiteSpace(Project.Workspace) || string.IsNullOrWhiteSpace(Project.Uri))
+            {
+                MessageBox.Show("Projekt, Workspace oder Zielpfad nicht gesetzt.");
+                return;
+            }
+
+            try
+            {
+                // Projektdatei aktualisieren
+                SaveProject(Project);
+
+                // Vorherige Datei löschen, falls vorhanden
+                if (File.Exists(Project.Uri))
+                    File.Delete(Project.Uri);
+
+                // Workspace als ZIP speichern
+                ZipFile.CreateFromDirectory(Project.Workspace, Project.Uri, CompressionLevel.Optimal, includeBaseDirectory: false);
+
+                MessageBox.Show($"Projekt erfolgreich gespeichert: {Project.Uri}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Fehler beim Speichern: {ex.Message}");
+            }
+        }
+
         public static void BuildProject()
         {
             UIEditor.Reset();
@@ -182,7 +322,9 @@ namespace AmiumScripter.Shared.Classes
             ClassRuntimeManager.ClearAll();
             ThreadsManager.StopAll();
 
-            if(!ProjectBuilder.BuildAssembly(GetProjectPath(Project.Name)))
+            ProjectBuilder.GenerateDynamicProjectFile(Project.Workspace, Project.Name);
+
+            if (!ProjectBuilder.BuildAssembly(ProjectManager.Project.Workspace))
             {
                 MessageBox.Show("❌ Build failed");
                 return;
@@ -239,13 +381,44 @@ namespace AmiumScripter.Shared.Classes
                 MessageBox.Show("Bitte erst ein Projekt erstellen oder laden.");
                 return;
             }
-            string projectPath = ProjectManager.GetProjectPath(ProjectManager.Project.Name);
+
+            // Nutze Workspace, falls vorhanden, sonst Standardpfad
+            string projectPath = !string.IsNullOrWhiteSpace(Project.Workspace)
+                ? Project.Workspace
+                : GetProjectPath(Project.Name);
+
+            string workspacePath = Path.Combine(projectPath, "launch.code-workspace");
+
+            // Baue launch.code-workspace mit absolutem Pfad
+            string json = $$"""
+    {
+      "folders": [
+        {
+          "path": "{{projectPath.Replace("\\", "\\\\")}}"
+        }
+      ],
+      "settings": {
+        "window.restoreWindows": "none",
+        "window.restoreFiles": "none",
+        "workbench.startupEditor": "none"
+      }
+    }
+    """;
+
+            File.WriteAllText(workspacePath, json);
 
             string codeExe = Environment.ExpandEnvironmentVariables(
-    @"%LocalAppData%\Programs\Microsoft VS Code\Code.exe");
+                @"%LocalAppData%\Programs\Microsoft VS Code\Code.exe");
 
-            Process.Start(codeExe, $"\"{projectPath}\"");
+            // Workspace ohne Trust-Abfrage öffnen
+            string args = $"--disable-workspace-trust --new-window \"{workspacePath}\"";
+
+         //   Process.Start(codeExe, $"--new-window \"{workspacePath}\"");
+            Process.Start(codeExe, args);
         }
+
+
+
         static void GetPagesFormAssembly()
         {
             Pages.Clear();
@@ -316,7 +489,6 @@ namespace AmiumScripter.Shared.Classes
 
 
     }
-
     public static class ProjectBuilder
     {
         public static void GenerateDynamicProjectFile(string projectPath, string projectName)
@@ -330,7 +502,7 @@ namespace AmiumScripter.Shared.Classes
         }
         public static string GenerateCsprojWithAbsolutePaths()
         {
-            string projectDlls = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "dlls");
+            string projectDlls = Path.Combine(ProjectManager.Project.Workspace, "dlls");
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
             // Alle DLL-Dateien aus beiden Verzeichnissen holen
@@ -471,12 +643,13 @@ namespace AmiumScripter.Shared.Classes
                 // Eigene Referenz hinzufügen (z. B. IPage, eigene Basisklassen etc.)
                 references.Add(MetadataReference.CreateFromFile(typeof(IPage).Assembly.Location));
 
+                Logger.Log("[ProjectBuilder] reading custom dll folder: " + customDllsRoot);
                 // Benutzerdefinierte DLLs aus dem "dlls"-Ordner einbinden (immer aktuell)
                 if (Directory.Exists(customDllsRoot))
                 {
                     foreach (var dll in Directory.GetFiles(customDllsRoot, "*.dll"))
                     {
-                        // Alte Referenzen mit identischem Pfad entfernen
+                        Logger.Log("[ProjectBuilder] Add custom dll:" +dll);// Alte Referenzen mit identischem Pfad entfernen
                         references.RemoveAll(r =>
                             string.Equals(r.Display, dll, StringComparison.OrdinalIgnoreCase));
 
@@ -484,13 +657,21 @@ namespace AmiumScripter.Shared.Classes
                         references.Add(MetadataReference.CreateFromFile(dll));
                     }
                 }
+                else
+                {
+                    Logger.Fatal("Dll Folder not found: " + customDllsRoot);
+                }
+
+                foreach (var r in references)
+                    Logger.Log("[ProjectBuilder] Reference: " + r.Display);
+
 
                 // Kompilieren
                 var compilation = CSharpCompilation.Create(
-                    "DynamicPageAssembly",
-                    syntaxTrees,
-                    references,
-                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                        "DynamicPageAssembly",
+                        syntaxTrees,
+                        references,
+                        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
                 using var ms = new MemoryStream();
                 var result = compilation.Emit(ms);

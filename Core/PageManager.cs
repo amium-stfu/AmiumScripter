@@ -27,7 +27,7 @@ namespace AmiumScripter.Core
         public static Dictionary<string, IPage> Pages { get; set; } = new();
         public static void AddPage(string projectName, string pageName)
         {
-            string pageRootPath = Path.Combine(ProjectManager.GetProjectPath(projectName), "Pages", pageName);
+            string pageRootPath = Path.Combine(ProjectManager.Project.Workspace, "Pages", pageName);
  
             string classesPath = Path.Combine(pageRootPath, "Classes");
             string controlsPath = Path.Combine(pageRootPath, "Classes");
@@ -90,7 +90,7 @@ namespace AmiumScripter.Pages.{pageName}
             string filePath = Path.Combine(pageRootPath, "page.cs");
             File.WriteAllText(filePath, pageCode);
 
-            string projectPath = Path.Combine(ProjectManager.GetProjectPath(projectName), "project.json");
+            string projectPath = Path.Combine(ProjectManager.Project.Workspace, "project.json");
 
             if (!File.Exists(projectPath))
             {
@@ -143,7 +143,7 @@ namespace AmiumScripter.Pages.{pageName}
         }
         internal static void AddView(string projectName, string pageName)
         {
-            string viewPath = Path.Combine(ProjectManager.GetProjectPath(projectName), "Pages", pageName, "view.cs");
+            string viewPath = Path.Combine(ProjectManager.Project.Workspace, "Pages", pageName, "view.cs");
             string viewCode = $@"
 using AmiumScripter;
 using AmiumScripter.Core;
@@ -193,7 +193,7 @@ namespace AmiumScripter.Pages.{pageName}
         }
         internal static void AddControls(string projectName, string pageName)
         {
-            string controlsPath = Path.Combine(ProjectManager.GetProjectPath(projectName), "Pages", pageName, "controls.cs");
+            string controlsPath = Path.Combine(ProjectManager.Project.Workspace, "Pages", pageName, "controls.cs");
             string controlsCode = $@"
 using AmiumScripter.Controls;
 using AmiumScripter.Core;
@@ -225,7 +225,7 @@ namespace AmiumScripter.Pages.{pageName}
         internal static void WriteProjectCs(string projectName)
         {
             Pages.Clear();
-            string ProjectPath = Path.Combine(ProjectManager.GetProjectPath(projectName), "Project.cs");
+            string ProjectPath = Path.Combine(ProjectManager.Project.Workspace, "Project.cs");
 
             var cPage = new List<string>();
             var uPage = new List<string>();

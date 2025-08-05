@@ -54,11 +54,11 @@ namespace AmiumScripter.Core
 
             if (page == null)
             {
-                classPath = Path.Combine(ProjectManager.GetProjectPath(projectName), "Shared", "Classes");
+                classPath = Path.Combine(ProjectManager.Project.Workspace, "Shared", "Classes");
             }
             else
             {
-                classPath = Path.Combine(ProjectManager.GetProjectPath(projectName), page, "Classes");
+                classPath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Classes");
             }
             Directory.CreateDirectory(classPath); // Falls Projekt noch nicht existiert
 
