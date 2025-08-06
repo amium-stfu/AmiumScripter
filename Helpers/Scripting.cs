@@ -1,6 +1,6 @@
 ﻿using AmiumScripter;
 using AmiumScripter.Core;
-using AmiumScripter.Shared;
+using AmiumScripter.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,6 +33,106 @@ namespace AmiumScripter.Helpers
             string rootlessPath = uri.Substring(root.Length).Replace(Path.DirectorySeparatorChar, '\\');
             return $@"\\{computerName}\{rootlessPath}";
         }
+    }
+
+    public static class EditValue
+    {
+        public static void WithNumPadDialog(ref string value, string text = "", string unit1 = "", string unit2 = "", string unit3 = "", string unit4 = "")
+        {
+            string localValue = value;
+
+            // Pass the local variable to NumBlock
+            NumBlock edit = new NumBlock(
+                stringGetter: () => localValue,
+                stringSetter: (val) => localValue = val,
+                text: text,
+                unit1: unit1,
+                unit2: unit2,
+                unit3: unit3,
+                unit4: unit4
+            );
+
+            edit.ShowDialog();
+
+            // Update the reference parameter after dialog closes
+            value = localValue;
+        }
+        public static bool WithNumPadDialog(ref int intValue, string text = "", string unit = "", int min = int.MinValue, int max = int.MaxValue)
+        {
+            int localValue = intValue;
+
+            using (NumBlock edit = new NumBlock(
+                intGetter: () => localValue,
+                intSetter: (value) => localValue = value,
+                cText: text,
+                cUnit: unit,
+                cMax: max,
+                cMin: min
+            ))
+            {
+                if (edit.ShowDialog() == DialogResult.OK)
+                {
+                    intValue = localValue;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public static bool WithNumPadDialog(ref double doubleValue, string text = "", string unit = "", double min = double.NaN, double max = double.NaN)
+        {
+            double localValue = doubleValue;
+
+            using (NumBlock edit = new NumBlock(
+                doubleGetter: () => localValue,
+                doubleSetter: (value) => localValue = value,
+                text: text,
+                unit: unit,
+                max: max,
+                min: min
+            ))
+            {
+                if (edit.ShowDialog() == DialogResult.OK)
+                {
+                    doubleValue = localValue;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public static bool WithKeyboardDialog(ref string stringValue, string text = "")
+        {
+            string localValue = stringValue;
+
+            using (Keyboard keyboard = new Keyboard(
+                getter: () => localValue,
+                setter: (val) => localValue = val,
+                text: text
+            ))
+            {
+                keyboard.Qertz();
+                keyboard.ShowNumblock();
+
+                if (keyboard.ShowDialog() == DialogResult.OK)
+                {
+                    stringValue = localValue;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+
     }
 
     public static class ConversionExtensions

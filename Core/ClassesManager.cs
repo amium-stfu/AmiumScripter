@@ -1,4 +1,4 @@
-﻿using AmiumScripter.Shared;
+﻿
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
@@ -10,6 +10,7 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 
 namespace AmiumScripter.Core
 {
@@ -28,7 +29,7 @@ namespace AmiumScripter.Core
         protected ClassBase(string instanceName)
         {
             InstanceName = instanceName;
-            Logger.Log($"[ClassBase] Register {GetType().Name} ({InstanceName})");
+            Logger.DebugMsg($"[ClassBase] Register {GetType().Name} ({InstanceName})");
             ClassRuntimeManager.Register(this); // immer automatisch!
         }
         public abstract void Destroy();
@@ -86,13 +87,13 @@ namespace {nameSpace}
         public {className}(string instanceName) : base(instanceName)
         {{
             // Optional: Initialisierungscode
-            Logger.Log(""[Class {className}] Initialized with name: "" + InstanceName);
+            Logger.DebugMsg(""[Class {className}] Initialized with name: "" + InstanceName);
     
         }}
 
         public override void Destroy()
         {{
-             Logger.Log(""[Class {className}] Destroyed: "" + InstanceName);
+             Logger.DebugMsg(""[Class {className}] Destroyed: "" + InstanceName);
         }}
     }}
 }}";

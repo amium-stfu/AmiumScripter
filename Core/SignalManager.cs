@@ -23,7 +23,7 @@ namespace AmiumScripter.Core
         /// <summary>
         /// Enqueues a value update for a signal to be processed asynchronously.
         /// </summary>
-        internal static void QueueSet( string name, object value)
+        internal static void QueueSet(string name, object value)
         {
             _setQueue.Enqueue((name, value));
         }
@@ -31,9 +31,9 @@ namespace AmiumScripter.Core
         /// <summary>
         /// Immediately sets the value of an existing signal in the DataStorage.
         /// </summary>
-        internal static void SetImmediate( string name, object value)
+        internal static void SetImmediate(string name, object value)
         {
-            if (value is not BaseSignal incoming)
+            if (value is not BaseSignalCommon incoming)
                 return;
 
             if (!SignalPool.TryGet(name, out var obj))
@@ -71,17 +71,17 @@ namespace AmiumScripter.Core
         }
 
         public static bool DebugFlag;
-        public static void PushSignal(string sender, BaseSignal signal, bool direct = false)
+        public static void PushSignal(string sender, BaseSignalCommon signal, bool direct = false)
         {
             if (DebugFlag)
                 Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} -> {sender} push signal {signal.Name}");
 
             signal.SetLastSender(sender);
-            
+
             if (direct)
-                SetImmediate(signal.Name, signal.Value);
+                SetImmediate(signal.Name, signal);
             else
-                QueueSet(signal.Name, signal.Value);
+                QueueSet(signal.Name, signal);
         }
 
         internal static void ProcessQueue()
@@ -95,7 +95,7 @@ namespace AmiumScripter.Core
 
         internal static void SetProperty(string name, string key, string? value)
         {
-            if (SignalPool.TryGet(name, out var obj) && obj is BaseSignal signal)
+            if (SignalPool.TryGet(name, out var obj) && obj is BaseSignalCommon signal)
             {
                 signal.SetProperty(key, value);
             }
@@ -109,7 +109,7 @@ namespace AmiumScripter.Core
         /// <summary>
         /// Optional callback when a signal was updated.
         /// </summary>
-        public static Action<string, BaseSignal>? OnSignalUpdated;
+        public static Action<string, BaseSignalCommon>? OnSignalUpdated;
     }
 
 

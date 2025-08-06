@@ -1,4 +1,4 @@
-﻿using AmiumScripter.Shared;
+﻿
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
@@ -245,7 +245,7 @@ namespace AmiumScripter.Shared.Classes
             string jsonPath = Path.Combine(path, "project.json");
             string json = JsonSerializer.Serialize(project, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(jsonPath, json);
-            SignalStorageSerializer.SaveToXml();
+            SignalStorageSerializer.SaveToJson();
         }
 
         public static void SaveAs()
@@ -267,7 +267,7 @@ namespace AmiumScripter.Shared.Classes
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 SaveProject(Project);
-                string projectPath = GetProjectPath(Project.Name);
+                string projectPath = Project.Workspace;
                 string targetFile = dialog.FileName;
                 Project.Uri = targetFile;
 
@@ -318,7 +318,7 @@ namespace AmiumScripter.Shared.Classes
         public static void BuildProject()
         {
             UIEditor.Reset();
-            SignalStorageSerializer.LoadFromXml();
+            SignalStorageSerializer.LoadFromJson();
             ClassRuntimeManager.ClearAll();
             ThreadsManager.StopAll();
 
@@ -350,7 +350,7 @@ namespace AmiumScripter.Shared.Classes
             UIEditor.PageView = Views;
             UIEditor.AttachPagesViewToUI();
 
-            Logger.Log("[ProjectManager] BuildProject()");
+            Logger.DebugMsg("[ProjectManager] BuildProject()");
 
         }
         public static void RunProject()
@@ -358,11 +358,11 @@ namespace AmiumScripter.Shared.Classes
             var assembly = LoadedAssembly;
             var projectType = assembly.GetType("AmiumScripter.Project");
             projectType.GetMethod("Run", BindingFlags.Public | BindingFlags.Static)?.Invoke(null, null);
-            Logger.Log("[ProjectManager] RunProject()");
+            Logger.DebugMsg("[ProjectManager] RunProject()");
         }
         public static void StopProject()
         {
-            Logger.Log("[ProjectManager] StopProject()");
+            Logger.DebugMsg("[ProjectManager] StopProject()");
             ThreadsManager.StopAll();
             TokenManager.CancelAll();
             TasksManager.StopAll();
@@ -372,7 +372,7 @@ namespace AmiumScripter.Shared.Classes
             UIEditor.PageView?.Clear();
 
             UnloadProject();
-            Logger.Log("[ProjectManager] Project stopped");
+            Logger.DebugMsg("[ProjectManager] Project stopped");
         }
         public static void OpenEditor()
         {
@@ -422,13 +422,13 @@ namespace AmiumScripter.Shared.Classes
         static void GetPagesFormAssembly()
         {
             Pages.Clear();
-            Logger.Log("[ProjectManager] Get Pages");
+            Logger.DebugMsg("[ProjectManager] Get Pages");
             var assembly = LoadedAssembly;
 
 
             var projectType = assembly.GetType("AmiumScripter.Project");
             var pagesDict = projectType.GetField("Pages", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as IDictionary;
-            Logger.Log("[ProjectManager] qty Pages " + pagesDict.Count);
+            Logger.DebugMsg("[ProjectManager] qty Pages " + pagesDict.Count);
 
 
             foreach (DictionaryEntry entry in pagesDict)
@@ -546,22 +546,22 @@ namespace AmiumScripter.Shared.Classes
             var syntaxTrees = new List<SyntaxTree>();
             try
             {
-                Logger.Log("[ProjectBuilder] BuildAssembly Try to Build: " + projectPath);
+                Logger.DebugMsg("[ProjectBuilder] BuildAssembly Try to Build: " + projectPath);
 
                 string projectRoot = projectPath;
                 string sharedClassesRoot = Path.Combine(projectRoot, "Shared", "Classes");
  
                 string customDllsRoot = Path.Combine(projectRoot, "dlls");
 
-                Logger.Log("[ProjectBuilder] projectRoot:          " + projectRoot);
-                Logger.Log("[ProjectBuilder] sharedClassesRoot:    " + sharedClassesRoot);
-                Logger.Log("[ProjectBuilder] customDllsRoot:       " + customDllsRoot);
+                Logger.DebugMsg("[ProjectBuilder] projectRoot:          " + projectRoot);
+                Logger.DebugMsg("[ProjectBuilder] sharedClassesRoot:    " + sharedClassesRoot);
+                Logger.DebugMsg("[ProjectBuilder] customDllsRoot:       " + customDllsRoot);
 
                 string pagesFolder = Path.Combine(projectPath, "Pages");
 
                 List<string> pages = Directory.GetDirectories(pagesFolder, "*", SearchOption.TopDirectoryOnly).ToList();
 
-                Logger.Log("[ProjectBuilder] Qty pages:       " + pages.Count);
+                Logger.DebugMsg("[ProjectBuilder] Qty pages:       " + pages.Count);
 
                 foreach (string page in pages)
                 {
@@ -577,18 +577,18 @@ namespace AmiumScripter.Shared.Classes
                 if (File.Exists(projectCsPath))
                     syntaxTrees.Add(CSharpSyntaxTree.ParseText(CheckCode(projectCsPath), path: projectCsPath));
                 else
-                    Logger.Fatal("[PageRuntime] project.cs not found: " + projectCsPath);
+                    Logger.FatalMsg("[PageRuntime] project.cs not found: " + projectCsPath);
 
                 //SignalPool
                 string sharedSignalPool = Path.Combine(projectRoot, "Shared", "SignalPool.cs");
                 if (File.Exists(sharedSignalPool))
                     syntaxTrees.Add(CSharpSyntaxTree.ParseText(CheckCode(sharedSignalPool), path: sharedSignalPool));
                 else
-                    Logger.Fatal("[PageRuntime] SignalPool.cs not found: " + sharedSignalPool);
+                    Logger.FatalMsg("[PageRuntime] SignalPool.cs not found: " + sharedSignalPool);
 
 
                 foreach (var tree in syntaxTrees)
-                    Logger.Log("[Build] SyntaxTree: " + tree.FilePath);
+                    Logger.DebugMsg("[Build] SyntaxTree: " + tree.FilePath);
 
 
                 // Custom DLLs - Assembly Resolve einmalig registrieren
@@ -643,13 +643,13 @@ namespace AmiumScripter.Shared.Classes
                 // Eigene Referenz hinzufügen (z. B. IPage, eigene Basisklassen etc.)
                 references.Add(MetadataReference.CreateFromFile(typeof(IPage).Assembly.Location));
 
-                Logger.Log("[ProjectBuilder] reading custom dll folder: " + customDllsRoot);
+                Logger.DebugMsg("[ProjectBuilder] reading custom dll folder: " + customDllsRoot);
                 // Benutzerdefinierte DLLs aus dem "dlls"-Ordner einbinden (immer aktuell)
                 if (Directory.Exists(customDllsRoot))
                 {
                     foreach (var dll in Directory.GetFiles(customDllsRoot, "*.dll"))
                     {
-                        Logger.Log("[ProjectBuilder] Add custom dll:" +dll);// Alte Referenzen mit identischem Pfad entfernen
+                        Logger.DebugMsg("[ProjectBuilder] Add custom dll:" +dll);// Alte Referenzen mit identischem Pfad entfernen
                         references.RemoveAll(r =>
                             string.Equals(r.Display, dll, StringComparison.OrdinalIgnoreCase));
 
@@ -659,11 +659,11 @@ namespace AmiumScripter.Shared.Classes
                 }
                 else
                 {
-                    Logger.Fatal("Dll Folder not found: " + customDllsRoot);
+                    Logger.FatalMsg("Dll Folder not found: " + customDllsRoot);
                 }
 
                 foreach (var r in references)
-                    Logger.Log("[ProjectBuilder] Reference: " + r.Display);
+                    Logger.DebugMsg("[ProjectBuilder] Reference: " + r.Display);
 
 
                 // Kompilieren
@@ -678,9 +678,9 @@ namespace AmiumScripter.Shared.Classes
 
                 if (!result.Success)
                 {
-                    Logger.Fatal("❌ Build-Fehler:");
+                    Logger.FatalMsg("❌ Build-Fehler:");
                     foreach (var d in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
-                        Logger.Fatal($"  ➤ {d}");
+                        Logger.FatalMsg($"  ➤ {d}");
                     return false;
                 }
 
@@ -689,12 +689,12 @@ namespace AmiumScripter.Shared.Classes
                 byte[] asmBytes = ms.ToArray(); // aus MemoryStream nach Roslyn-Emit
                 ProjectManager.BuildAndLoadProject(asmBytes, ProjectManager.Project.Name);
 
-                Logger.Log("[PageRuntime] BuildAssembly successful.");
+                Logger.DebugMsg("[PageRuntime] BuildAssembly successful.");
                 return true;
             }
             catch (Exception ex)
             {
-                Logger.Fatal("[PageRuntime] BuildAssembly Failed " + ex.Message);
+                Logger.DebugMsg("[PageRuntime] BuildAssembly Failed " + ex.Message);
                 return false;
             }
         }
@@ -770,16 +770,16 @@ namespace AmiumScripter.Shared.Classes
 
 
             if(code.Contains("CancellationToken"))
-                Logger.Log($"[WARN] {file} contains direct unmanaged CancellationToken usage! Please use 'AToken()' instead.");
+                Logger.DebugMsg($"[WARN] {file} contains direct unmanaged CancellationToken usage! Please use 'AToken()' instead.");
             // Thread
             var reThread = new Regex(@"new\s+Thread\b|System\.Threading\.Thread\b", RegexOptions.IgnoreCase);
             if (reThread.IsMatch(code))
-                Logger.Log($"[WARN] {file} contains direct unmanaged Thread usage! Please use 'AThread' instead.");
+                Logger.DebugMsg($"[WARN] {file} contains direct unmanaged Thread usage! Please use 'AThread' instead.");
 
             // Task
             var reTask = new Regex(@"new\s+Task\b|System\.Threading\.Tasks\.Task\b", RegexOptions.IgnoreCase);
             if (reTask.IsMatch(code))
-                Logger.Log($"[WARN] {file} contains direct unmanaged Task usage! Please use 'ATask' or your own task registry instead.");
+                Logger.DebugMsg($"[WARN] {file} contains direct unmanaged Task usage! Please use 'ATask' or your own task registry instead.");
 
             // Sleep
             //var reSleep = new Regex(@"\bSleep\s*\(|System\.Threading\.Thread\.Sleep\b", RegexOptions.IgnoreCase);
@@ -789,12 +789,12 @@ namespace AmiumScripter.Shared.Classes
             // while(true)
             var reWhile = new Regex(@"while\s*\(\s*true\s*\)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
             if (reWhile.IsMatch(code))
-                Logger.Log($"[WARN] {file} contains 'while(true)'! Please use a cancellation token or IsRunning flag for exit condition.");
+                Logger.DebugMsg($"[WARN] {file} contains 'while(true)'! Please use a cancellation token or IsRunning flag for exit condition.");
 
             // for(;;)
             var reFor = new Regex(@"for\s*\(\s*;\s*;\s*\)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
             if (reFor.IsMatch(code))
-                Logger.Log($"[WARN] {file} contains 'for(;;)'! Please use a cancellation token or IsRunning flag for exit condition.");
+                Logger.DebugMsg($"[WARN] {file} contains 'for(;;)'! Please use a cancellation token or IsRunning flag for exit condition.");
 
             return code;
         }

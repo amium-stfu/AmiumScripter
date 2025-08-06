@@ -127,7 +127,7 @@ namespace AmiumScripter.Core
                             output.Add("                " + ctrlLine);
                         output.Add("            };");
                         output.Add($"            parent.Controls.Add({controlName});");
-                        output.Add($"            Logger.Log(\"[PageControls] Creating instance of SignalView  {controlName}\");");
+                        output.Add($"            Logger.DebugMsg(\"[PageControls] Creating instance of SignalView  {controlName}\");");
                         output.Add("            // ----");
                     }
                     insideInitBlock = false;
@@ -153,13 +153,14 @@ namespace AmiumScripter.Core
             if (!name.StartsWith("Ctr"))
                 name = "Ctr" + name;
 
-            var filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "Pages", page, "Controls.cs");
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
 
             if (!File.Exists(filePath))
                 return false;
 
+            // Suche nach Feld-Deklaration mit beliebigem Typ, aber passendem Namen
             return File.ReadAllLines(filePath)
-                       .Any(line => line.Contains($"{name} {{ get; set; }}"));
+                       .Any(line => line.Contains($" {name};"));
         }
         public static void RemoveSignalControl(string name, string target, string page)
         {
@@ -234,11 +235,11 @@ namespace AmiumScripter.Core
             if (!name.StartsWith("Ctr"))
                 name = "Ctr" + name;
 
-            //if (!ControlExists(name, page))
-            //{
-            //    MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
-            //    return;
-            //}
+            if (ControlExists(name, page))
+            {
+                MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
+                return;
+            }
 
             var controlLines = AddSignalControlLines(name, source);
             var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
@@ -254,9 +255,9 @@ namespace AmiumScripter.Core
         $"    Location = new Point(10, 10),",
         $"    Size = new Size(200, 100),",
         $"    BorderColor = Color.Black,",
-        $"    SignalText = \"Temperatur\",",
-        $"    SignalUnit = \"°C\",",
-        $"    SignalValue = \"23.5\",",
+        $"    SignalText = \"{name.Replace("Ctr","")}\",",
+        $"    SignalUnit = \"udef\",",
+        $"    SignalValue = \"udef\",",
         $"    SourceName = \"{source}\"",
 
     };

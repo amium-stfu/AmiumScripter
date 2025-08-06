@@ -1,5 +1,4 @@
 ﻿using AmiumScripter.Helpers;
-using AmiumScripter.Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +34,7 @@ namespace AmiumScripter.Core
             {
                 IdleLoop.Start();
             }
-            Logger.Log("[PageView] Start IdleLoop");
+            Logger.DebugMsg("[PageView] Start IdleLoop");
         }
 
         public virtual void Initialize()
@@ -49,7 +48,7 @@ namespace AmiumScripter.Core
         public void Destroy()
         {
             Controls.Clear();
-            Logger.Log("[PageView] TestPage Destroy");
+            Logger.DebugMsg("[PageView] TestPage Destroy");
         }
         public virtual void ViewIdleLoop() { }
 

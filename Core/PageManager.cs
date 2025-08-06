@@ -1,4 +1,4 @@
-﻿using AmiumScripter.Shared;
+﻿
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
@@ -19,6 +19,9 @@ namespace AmiumScripter.Core
         void Run();
         void Destroy();
     }
+
+
+
 
     public static class PageManager
     {
@@ -73,16 +76,16 @@ namespace AmiumScripter.Pages.{pageName}
         public void Initialize()
             {{ 
                
-                Logger.Log(""[PageCode] TestPage Initialize"");
+                Logger.DebugMsg(""[PageCode] TestPage Initialize"");
             }}
 
         public void Run() 
             {{
-                Logger.Log(""[PageCode] TestPage Run"");
+                Logger.DebugMsg(""[PageCode] TestPage Run"");
             }}
         public void Destroy()
             {{
-                Logger.Log(""[PageCode] TestPage Destroy"");
+                Logger.DebugMsg(""[PageCode] TestPage Destroy"");
             }}
     }}
 }}";
@@ -170,14 +173,14 @@ namespace AmiumScripter.Pages.{pageName}
         public override void Initialize()
         {{ 
             PageControls.AddControls(this); 
-            Logger.Log(""[PageView] {pageName} Initialize"");
+            Logger.DebugMsg(""[PageView] {pageName} Initialize"");
         }}
 
         
         public override void Run()
         {{ 
             StartIdleLoop(interval: 1000); // Start Idle Loop with 1000ms interval
-            Logger.Log(""[PageView] {pageName} Run"");
+            Logger.DebugMsg(""[PageView] {pageName} Run"");
 
         }}
        

@@ -1,13 +1,18 @@
 ﻿using AmiumScripter.Core;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Text.Json.Serialization;
 using static AmiumScripter.Core.StorageItem;
 using static System.Windows.Forms.DataFormats;
+using AmiumScripter.Simulation;
 
 namespace AmiumScripter.Modules
 {
@@ -25,68 +30,33 @@ namespace AmiumScripter.Modules
         public string Value { get; set; }
     }
 
-    public abstract class BaseSignal
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(Signal), "signal")]
+    [JsonDerivedType(typeof(Module), "module")]
+    [JsonDerivedType(typeof(BoolSignal), "boolsignal")]
+    [JsonDerivedType(typeof(StringSignal), "stringsignal")]
+    [JsonDerivedType(typeof(DemoSignal), "demosignal")]
+    public abstract class BaseSignalCommon
     {
-        [XmlIgnore]
         public string Name { get; protected set; }
-
-        [XmlElement("Name")]
-        public string XmlName
-        {
-            get => Name;
-            set => Name = value;
-        }
-
-        [XmlIgnore]
         public ulong LastUpdate { get; protected set; }
-
-        [XmlElement("LastUpdate")]
-        public ulong XmlLastUpdate
-        {
-            get => LastUpdate;
-            set => LastUpdate = value;
-        }
-
-        [XmlIgnore]
+        public bool register;
         public string LastSender { get; protected set; }
-
-        [XmlElement("LastSender")]
-        public string XmlLastSender
-        {
-            get => LastSender;
-            set => LastSender = value;
-        }
-
-        [XmlIgnore]
-        public abstract object? Value { get; set; }
-
-        [XmlIgnore]
-        public BaseSignal WriteSet
+        public BaseSignalCommon WriteSet
         {
             get => _writeSet;
             protected set
             {
                 _writeSet = value;
-                _writeSet?.UpdateStorage(); // ensure it's also stored
+                _writeSet?.UpdateStorage();
             }
         }
-        private BaseSignal _writeSet;
-
-        [XmlIgnore]
+        private BaseSignalCommon _writeSet;
         public virtual string Type => "BaseSignal";
-
-        [XmlIgnore]
         public Dictionary<string, string> Properties { get; set; } = new();
-
-        [XmlElement("Property")]
-        public List<PropertyItem> XmlProperties
-        {
-            get => Properties.Select(p => new PropertyItem { Key = p.Key, Value = p.Value }).ToList();
-            set => Properties = value?.ToDictionary(p => p.Key, p => p.Value) ?? new();
-        }
-
         protected void UpdateStorage(string sender = null)
         {
+            if (!register) return;
             LastUpdate = (ulong)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalMilliseconds;
             SignalPool.Set(Name, this);
             if (sender != null)
@@ -112,14 +82,48 @@ namespace AmiumScripter.Modules
 
         public bool MatchesWriteSet()
         {
-            return WriteSet != null && Equals(Value, WriteSet.Value);
+            return WriteSet != null && Equals(ValueAsObject, WriteSet.ValueAsObject);
         }
         public void SetLastSender(string sender) => LastSender = sender;
+
+        // Für Polymorphie im Pool
+        public abstract object ValueAsObject { get; set; }
     }
 
-    public class Signal : BaseSignal
+    public abstract class BaseSignalDouble : BaseSignalCommon
     {
-        public override object? Value
+        public abstract double Value { get; set; }
+        public override object ValueAsObject
+        {
+            get => Value;
+            set => Value = value is double d ? d : Convert.ToDouble(value);
+        }
+    }
+
+    public abstract class BaseSignalBool : BaseSignalCommon
+    {
+        public abstract bool? Value { get; set; }
+        public override object ValueAsObject
+        {
+            get => Value;
+            set => Value = value is bool b ? b : Convert.ToBoolean(value);
+        }
+    }
+
+    public abstract class BaseSignalString : BaseSignalCommon
+    {
+        public abstract string Value { get; set; }
+        public override object ValueAsObject
+        {
+            get => Value;
+            set => Value = value?.ToString() ?? "";
+        }
+    }
+
+    public class Signal : BaseSignalDouble
+    {
+        private double _internalValue;
+        public override double Value
         {
             get
             {
@@ -129,29 +133,32 @@ namespace AmiumScripter.Modules
             }
             set
             {
-             _internalValue = Convert.ToDouble(value);
-              UpdateStorage(sender:"Code");  
+                _internalValue = value;
+                UpdateStorage(sender: "Code");
             }
         }
-
-        private double _internalValue;
-
-        public Signal() { }
-        public Signal(string name, string text = null, string unit = "", string format = "0.000", double value = double.NaN)
+        public double DoubleValue
         {
+            get => _internalValue;
+            set
+            {
+                _internalValue = value;
+                UpdateStorage("Code");
+            }
+        }
+        public Signal() { }
+        public Signal(string name, string text = null, string unit = "", string format = "0.000", double value = double.NaN, bool register = true)
+        {
+            this.register = register;
             Name = name;
             Value = value;
-
             SetProperty("unit", unit);
             SetProperty("text", text ?? name);
             SetProperty("format", format);
-
             if (!name.EndsWith(".WriteSet"))
                 WriteSet = new Signal(name + ".WriteSet", this.Text + " WriteSet", unit, format);
-            
             UpdateStorage();
         }
-
         public string Unit
         {
             get => GetProperty("unit", "");
@@ -169,74 +176,67 @@ namespace AmiumScripter.Modules
         }
         public override string Type => "Signal";
     }
-    public class StringSignal : BaseSignal
+
+    public class StringSignal : BaseSignalString
     {
         private string _value;
-
-        public override object Value
+        public override string Value
         {
-            get 
+            get
             {
                 if (SignalPool.TryGet(Name, out var obj) && obj is StringSignal sig)
                     return sig._value;
-                return double.NaN;
+                return "NA";
             }
             set
             {
-                _value = value?.ToString() ?? "NA";
+                _value = value ?? "NA";
                 UpdateStorage(sender: "Code");
             }
         }
-
         public StringSignal() { }
-        public StringSignal(string name, string text = null)
+        public StringSignal(string name, string text = null, bool register = true)
         {
+            this.register = register;
             Name = name;
-
             SetProperty("text", text ?? "#" + name);
-
-
             if (!name.EndsWith(".WriteSet"))
                 WriteSet = new StringSignal(name + ".WriteSet", this.Text + " WriteSet");
-
             UpdateStorage();
         }
-
         public string Text
         {
             get => GetProperty("text", "#" + Name);
             set => SetProperty("text", value);
         }
-
         public override string Type => "StringSignal";
     }
-    public class BoolSignal : BaseSignal
+
+    public class BoolSignal : BaseSignalBool
     {
         private bool _value;
-        public override object Value
+        public override bool? Value
         {
-            get 
+            get
             {
                 if (SignalPool.TryGet(Name, out var obj) && obj is BoolSignal sig)
                     return sig._value;
-                return double.NaN;
+                return null;
             }
             set
             {
-                _value = Convert.ToBoolean(value);
+                _value = value ?? false;
                 UpdateStorage(sender: "Code");
             }
         }
-
         public BoolSignal() { }
-        public BoolSignal(string name, string text = null)
+        public BoolSignal(string name, string text = null, bool register = true)
         {
+            this.register = register;
             Name = name;
             Text = text ?? "#" + name;
-
             if (!name.EndsWith(".WriteSet"))
                 WriteSet = new BoolSignal(name + ".WriteSet", this.Text + " WriteSet");
-
             UpdateStorage(sender: "Code");
         }
         public string Text
@@ -245,35 +245,26 @@ namespace AmiumScripter.Modules
             set => Properties["text"] = value;
         }
         public override string Type => "BoolSignal";
-
-    
-
     }
+
     public class Module : Signal
     {
         public Signal Set { get; set; } = null;
         public Signal Out { get; set; } = null;
-
         public Module() { }
-        public Module(string name, string text = null, string unit = "", string format = "0.000") : base(name, text, unit, format)
+        public Module(string name, string text = null, string unit = "", string format = "0.000", bool register = true) : base(name, text, unit, format, register: register)
         {
             Name = name;
             Properties["unit"] = unit;
             Properties["text"] = text ?? "#" + name;
             Properties["format"] = format;
-
-            Set = new Signal(name + ".set", text + ".Set", unit, format);
-            Out = new Signal(name + ".out", text + ".Out", "%", "0.00");
-
+            Set = new Signal(name + ".set", text + ".Set", unit, format, register: register);
+            Out = new Signal(name + ".out", text + ".Out", "%", "0.00", register: register);
             UpdateStorage();
         }
-
         public override string Type => "Module";
-
     }
 
 
 
-
-
-    }
+}

@@ -32,7 +32,7 @@ namespace AmiumScripter.Core
 
         public void PushSignal(object value, bool direct = false)
         {
-            if (value is not BaseSignal signal)
+            if (value is not BaseSignalCommon signal)
                 throw new Exception($"AClient {Name} tried to push an invalid signal type: {value?.GetType().Name}");
 
             if (!ClientManager.IsRegistered(this))

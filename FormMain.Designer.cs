@@ -34,6 +34,7 @@
             button4 = new Button();
             tableLayoutPanel1 = new TableLayoutPanel();
             panel1 = new Panel();
+            btnAddDll = new Button();
             btnSaveAs = new Button();
             btnSave = new Button();
             btnLoad = new Button();
@@ -44,8 +45,9 @@
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
             panel2 = new Panel();
+            btnLog = new Button();
             btnAddSignal = new Button();
-            btnAddDll = new Button();
+            btnSignalPool = new Button();
             tableLayoutPanel1.SuspendLayout();
             panel1.SuspendLayout();
             Book.SuspendLayout();
@@ -131,6 +133,17 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(983, 24);
             panel1.TabIndex = 0;
+            // 
+            // btnAddDll
+            // 
+            btnAddDll.Dock = DockStyle.Left;
+            btnAddDll.Location = new Point(675, 0);
+            btnAddDll.Name = "btnAddDll";
+            btnAddDll.Size = new Size(75, 24);
+            btnAddDll.TabIndex = 13;
+            btnAddDll.Text = "Add dll";
+            btnAddDll.UseVisualStyleBackColor = true;
+            btnAddDll.Click += btnAddDll_Click;
             // 
             // btnSaveAs
             // 
@@ -233,6 +246,8 @@
             // 
             // panel2
             // 
+            panel2.Controls.Add(btnSignalPool);
+            panel2.Controls.Add(btnLog);
             panel2.Controls.Add(btnAddSignal);
             panel2.Controls.Add(button4);
             panel2.Dock = DockStyle.Fill;
@@ -240,6 +255,17 @@
             panel2.Name = "panel2";
             panel2.Size = new Size(207, 677);
             panel2.TabIndex = 2;
+            // 
+            // btnLog
+            // 
+            btnLog.Dock = DockStyle.Bottom;
+            btnLog.Location = new Point(0, 630);
+            btnLog.Name = "btnLog";
+            btnLog.Size = new Size(207, 23);
+            btnLog.TabIndex = 6;
+            btnLog.Text = "Log";
+            btnLog.UseVisualStyleBackColor = true;
+            btnLog.Click += btnLog_Click;
             // 
             // btnAddSignal
             // 
@@ -252,16 +278,16 @@
             btnAddSignal.UseVisualStyleBackColor = true;
             btnAddSignal.Click += btnAddSignal_Click;
             // 
-            // btnAddDll
+            // btnSignalPool
             // 
-            btnAddDll.Dock = DockStyle.Left;
-            btnAddDll.Location = new Point(675, 0);
-            btnAddDll.Name = "btnAddDll";
-            btnAddDll.Size = new Size(75, 24);
-            btnAddDll.TabIndex = 13;
-            btnAddDll.Text = "Add dll";
-            btnAddDll.UseVisualStyleBackColor = true;
-            btnAddDll.Click += btnAddDll_Click;
+            btnSignalPool.Dock = DockStyle.Bottom;
+            btnSignalPool.Location = new Point(0, 607);
+            btnSignalPool.Name = "btnSignalPool";
+            btnSignalPool.Size = new Size(207, 23);
+            btnSignalPool.TabIndex = 7;
+            btnSignalPool.Text = "SignalPool";
+            btnSignalPool.UseVisualStyleBackColor = true;
+            btnSignalPool.Click += btnSignalPool_Click;
             // 
             // FormMain
             // 
@@ -298,5 +324,7 @@
         private TabPage tabPage1;
         private TabPage tabPage2;
         private Button btnAddDll;
+        private Button btnLog;
+        private Button btnSignalPool;
     }
 }

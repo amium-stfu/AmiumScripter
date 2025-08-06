@@ -1,4 +1,4 @@
-﻿using AmiumScripter.Shared;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,18 +32,18 @@ namespace AmiumScripter.Core
                 }
                 catch (OperationCanceledException)
                 {
-                    Logger.Log($"[ATask] {InstanceName} cancelled.");
+                    Logger.DebugMsg($"[ATask] {InstanceName} cancelled.");
                     OnCancelled?.Invoke();
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"[ATask] {InstanceName} exception: {ex.Message}");
+                    Logger.DebugMsg($"[ATask] {InstanceName} exception: {ex.Message}");
                     OnException?.Invoke(ex);
                     throw;
                 }
             }, _cts.Token);
-            Logger.Log($"[ATask] Registered: {InstanceName}");
+            Logger.DebugMsg($"[ATask] Registered: {InstanceName}");
         }
 
         public async Task AwaitAsync()
@@ -58,14 +58,14 @@ namespace AmiumScripter.Core
             if (_task == null || _task.IsCompleted)
                 return;
 
-            Logger.Log($"[ATask] Stop requested: {InstanceName}");
+            Logger.DebugMsg($"[ATask] Stop requested: {InstanceName}");
 
             _cts.Cancel();
             try { _task.Wait(2000); }
             catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is TaskCanceledException)) { }
-            catch (Exception ex) { Logger.Log($"[ATask] {InstanceName} error during stop: {ex.Message}"); }
+            catch (Exception ex) { Logger.DebugMsg($"[ATask] {InstanceName} error during stop: {ex.Message}"); }
 
-            Logger.Log($"✅ [ATask] Cleanly stopped: {InstanceName}");
+            Logger.DebugMsg($"✅ [ATask] Cleanly stopped: {InstanceName}");
             TasksManager.Deregister(this);
         }
     }
@@ -96,18 +96,18 @@ namespace AmiumScripter.Core
                 }
                 catch (OperationCanceledException)
                 {
-                    Logger.Log($"[ATask] {InstanceName} cancelled.");
+                    Logger.DebugMsg($"[ATask] {InstanceName} cancelled.");
                     OnCancelled?.Invoke();
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"[ATask] {InstanceName} exception: {ex.Message}");
+                    Logger.DebugMsg($"[ATask] {InstanceName} exception: {ex.Message}");
                     OnException?.Invoke(ex);
                     throw;
                 }
             }, _cts.Token);
-            Logger.Log($"[ATask] Registered: {InstanceName}");
+            Logger.DebugMsg($"[ATask] Registered: {InstanceName}");
         }
 
         public async Task<T?> AwaitAsync()
@@ -128,7 +128,7 @@ namespace AmiumScripter.Core
             if (_task == null || _task.IsCompleted)
                 return;
 
-            Logger.Log($"[ATask] Stop requested: {InstanceName}");
+            Logger.DebugMsg($"[ATask] Stop requested: {InstanceName}");
 
             _cts.Cancel();
             try
@@ -137,14 +137,14 @@ namespace AmiumScripter.Core
             }
             catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is TaskCanceledException))
             {
-                Logger.Log($"[ATask] {InstanceName} cancelled.");
+                Logger.DebugMsg($"[ATask] {InstanceName} cancelled.");
             }
             catch (Exception ex)
             {
-                Logger.Log($"[ATask] {InstanceName} error during stop: {ex.Message}");
+                Logger.DebugMsg($"[ATask] {InstanceName} error during stop: {ex.Message}");
             }
 
-            Logger.Log($"✅ [ATask] Cleanly stopped: {InstanceName}");
+            Logger.DebugMsg($"✅ [ATask] Cleanly stopped: {InstanceName}");
             TasksManager.Deregister(this);
         }
     }

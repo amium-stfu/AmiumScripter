@@ -3,6 +3,7 @@ using AmiumScripter.Forms;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using AmiumScripter.Helpers;
 
 namespace AmiumScripter
 {
@@ -38,7 +39,11 @@ namespace AmiumScripter
             dummyPageCounter = 0;
             dummySignalCounter = 0;
             string dummy = DateTime.Now.ToString("yyyyMMddHHmmss");
-            ProjectManager.CreateProject("MeinModulProjekt_" + dummy);
+
+            string name = "MyProject_v." + dummy;
+
+            if (EditValue.WithKeyboardDialog(ref name, "Enter Project Name"))
+                ProjectManager.CreateProject(name);
         }
 
         private void btnBuild_Click(object sender, EventArgs e)
@@ -79,12 +84,16 @@ namespace AmiumScripter
         int dummySignalCounter = 0;
         private void btnAddSignal_Click(object sender, EventArgs e)
         {
-            UIEditor.AddSignalControl(
-            name: $"Dummy{dummySignalCounter}",
-            page: UIEditor.CurrentPageName,
-            source: "Motor.Temperature" // SourceName im SignalView
-);
-            dummySignalCounter++;
+            string name = "";
+
+            if (EditValue.WithKeyboardDialog(ref name, "Enter Control Name"))
+            {
+                UIEditor.AddSignalControl(
+                name: name,
+                page: UIEditor.CurrentPageName,
+                source: "Motor.Temperature" // SourceName im SignalView
+                );
+            }
         }
 
 
@@ -107,6 +116,18 @@ namespace AmiumScripter
         private void btnAddDll_Click(object sender, EventArgs e)
         {
             ProjectManager.AddDllFile();
+        }
+
+        private void btnLog_Click(object sender, EventArgs e)
+        {
+            Root.LogForm.Show();
+        }
+
+        private void btnSignalPool_Click(object sender, EventArgs e)
+        {
+            FormSignalPool signalPoolForm = new FormSignalPool();
+            signalPoolForm.Show();
+
         }
     }
 

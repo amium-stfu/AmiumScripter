@@ -3,9 +3,12 @@ using AmiumScripter.Modules;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -34,10 +37,20 @@ namespace AmiumScripter.Core
             foreach (string key in _values.Keys)
                 Remove(key);
         }
+
+
+        public static object GetSignal(string name)
+        {
+            if (_values.ContainsKey(name))
+                return _values[name];
+            else
+                return null;
+        }
+
+
+
         internal static void Set(string key, object value)
         {
-            
-            
             bool isNew = !_values.ContainsKey(key);
 
             if (isNew)
@@ -49,7 +62,7 @@ namespace AmiumScripter.Core
             }
             else
             {
-                Debug.WriteLine("Update Signal " + key);
+                //  Debug.WriteLine("Update Signal " + key);
                 _values[key] = value;
             }
             ControlManager.SignalUpdated(key);
@@ -73,6 +86,32 @@ namespace AmiumScripter.Core
             _values.TryRemove(key, out _);
         }
         public static IEnumerable<string> Keys => _values.Keys;
+
+        public static DataTable SignalsToDataTable()
+        {
+            var snapshot = Snapshot(); // Macht ein thread-sicheres Abbild
+
+            DataTable table = new DataTable();
+            table.Columns.Add("Name", typeof(string));
+            table.Columns.Add("Text", typeof(string));
+            table.Columns.Add("Value", typeof(string));
+            table.PrimaryKey = new DataColumn[] { table.Columns["Name"] };
+
+            foreach (var kvp in snapshot)
+            {
+                if (kvp.Value is BaseSignalCommon signal)
+                {
+                    string name = signal.Name;
+                    string text = signal.GetProperty("Text", "");
+                    string valueStr = signal.ValueAsObject?.ToString() ?? "";
+
+                    table.Rows.Add(name, text, valueStr);
+                }
+            }
+            return table;
+        }
+
+
 
     }
 
@@ -113,13 +152,10 @@ namespace AmiumScripter.Core
             foreach (var key in SignalPool.Keys)
             {
                 Debug.WriteLine($"Found {SignalPool.Keys.Count()} keys");
-                if (SignalPool.TryGet(key, out var obj) && obj is BaseSignal signal)
+                if (SignalPool.TryGet(key, out var obj) && obj is BaseSignalCommon signal)
                 {
-                    if (signal.Name.EndsWith(".WriteSet") || signal.Name.EndsWith(".set") || signal.Name.EndsWith(".out"))
-                        continue; // optional: keine abgeleiteten Signale einfügen
-
                     string fieldName = NormalizeName(key);
-                    string typeName = signal.GetType().Name;
+                    string signalType = signal.Type; // Verwende das SignalType-Property
 
                     var text = signal.GetProperty("text", $"#{signal.Name}");
                     var unit = signal.GetProperty("unit", "");
@@ -128,21 +164,22 @@ namespace AmiumScripter.Core
                     // Konstruktor je nach Typ erzeugen
                     string ctorCode = signal switch
                     {
-                        Module => $"new Module(\"{signal.Name}\", \"{text}\", \"{unit}\", \"{format}\")",
-                        BoolSignal => $"new BoolSignal(\"{signal.Name}\", \"{text}\")",
-                        StringSignal => $"new StringSignal(\"{signal.Name}\", \"{text}\")",
-                        Signal => $"new Signal(\"{signal.Name}\", \"{text}\", \"{unit}\", \"{format}\")",
-                        _ => $"/* Unsupported signal type: {typeName} */ null"
+
+                        Module => $"new Module(name:\"{signal.Name}\", text:\"{text}\", unit:\"{unit}\", format:\"{format}\", register:false)",
+                        BoolSignal => $"new BoolSignal(name:\"{signal.Name}\",  text:\"{text}\", register:false)",
+                        StringSignal => $"new StringSignal(name:\"{signal.Name}\", text:\"{text}\", register:false)",
+                        Signal => $"new Signal(name:\"{signal.Name}\",  text:\"{text}\", unit:\"{unit}\",  format:\"{format}\", register:false)",
+                        _ => $"/* Unsupported signal type: {signalType} */ null"
                     };
 
-                    sb.AppendLine($"    public static readonly {typeName} {fieldName} = {ctorCode};");
+                    sb.AppendLine($"    public static readonly {signalType} {fieldName} = {ctorCode};");
                 }
             }
 
 
             sb.AppendLine("}");
 
-            string path = Path.Combine(ProjectManager.Project.Workspace,"Shared", "SignalPool.cs");
+            string path = Path.Combine(ProjectManager.Project.Workspace, "Shared", "SignalPool.cs");
             Debug.WriteLine($"Writing SignalPool.cs to: {path}");
             try
             {
@@ -163,47 +200,55 @@ namespace AmiumScripter.Core
     }
     public static class SignalStorageSerializer
     {
-        private static readonly XmlSerializer _serializer = new XmlSerializer(typeof(List<BaseSignal>), new[]
+        public static void SaveToJson()
         {
-            typeof(Signal), typeof(BoolSignal), typeof(StringSignal), typeof(Module)
-        });
-
-        public static void SaveToXml()
-        {
-           // string filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "DataStorage.xml");
-
-            string filePath = Path.Combine(ProjectManager.Project.Workspace, "DataStorage.xml");
-
-            var allSignals = new List<BaseSignal>();
-
+            string filePath = Path.Combine(ProjectManager.Project.Workspace, "DataStorage.json");
+            var allSignals = new List<BaseSignalCommon>();
             foreach (var key in SignalPool.Keys)
             {
-                if (SignalPool.TryGet(key, out var obj) && obj is BaseSignal signal)
+                if (SignalPool.TryGet(key, out var obj) && obj is BaseSignalCommon signal)
                 {
                     allSignals.Add(signal);
                 }
             }
-
-            using var writer = new StreamWriter(filePath);
-            _serializer.Serialize(writer, allSignals);
-        }
-
-        public static void LoadFromXml()
-        {
-            string filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name),"DataStorage.xml");
-            
-            SignalPool.Reset();
-
-            if (!File.Exists(filePath))
-            {
-                Debug.WriteLine("DataStorage.xml not found");
-                return;
-            }
-
             try
             {
-                using var reader = new StreamReader(filePath);
-                if (_serializer.Deserialize(reader) is List<BaseSignal> signals)
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    IncludeFields = true,
+                    Converters = { new JsonStringEnumConverter() },
+                    NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+                };
+                string json = JsonSerializer.Serialize(allSignals, options);
+                File.WriteAllText(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("JSON Serialization error: " + ex.Message);
+                MessageBox.Show("JSON Serialization error: " + ex.Message);
+            }
+        }
+
+        public static void LoadFromJson()
+        {
+            string filePath = Path.Combine(ProjectManager.GetProjectPath(ProjectManager.Project.Name), "DataStorage.json");
+            SignalPool.Reset();
+            if (!File.Exists(filePath))
+            {
+                Debug.WriteLine("DataStorage.json not found");
+                return;
+            }
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    IncludeFields = true,
+                    NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+                };
+                string json = File.ReadAllText(filePath);
+                var signals = JsonSerializer.Deserialize<List<BaseSignalCommon>>(json, options);
+                if (signals != null)
                 {
                     foreach (var signal in signals)
                     {
@@ -213,7 +258,6 @@ namespace AmiumScripter.Core
             }
             catch (Exception ex)
             {
-                // Optional Logging
                 Debug.WriteLine("Failed to load signals: " + ex.Message);
             }
         }
