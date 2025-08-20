@@ -20,40 +20,41 @@ namespace AmiumScripter
 
         public static FormLog LogForm = new FormLog();
     }
+    public enum LogLevelEnum { Debug, Information, Warning, Error, Fatal }
+
     public class LogEntry
     {
         public DateTime Time { get; set; }
-        public string Level { get; set; }
-        public string Message { get; set; }
+        public LogLevelEnum LevelEnum { get; set; } = LogLevelEnum.Information;
+        public string Level => LevelEnum.ToString(); // nie null
+        public string Message { get; set; } = "";
     }
 
     public static class Logger
     {
-      
+
 
         public class WinFormsSink : ILogEventSink
         {
-            public BindingList<LogEntry> Entries { get; } = new BindingList<LogEntry>();
-            public int MaxEntries { get; set; } = 2000; // z.B. 2000 Zeilen max.
+            private readonly SynchronizationContext _ui = new WindowsFormsSynchronizationContext();
+            public BindingList<LogEntry> Entries { get; } = new();
 
-            public void Emit(LogEvent logEvent)
+            public void Emit(LogEvent e)
             {
                 var entry = new LogEntry
                 {
-                    Time = logEvent.Timestamp.LocalDateTime,
-                    Level = logEvent.Level.ToString(),
-                    Message = logEvent.RenderMessage()
+                    Time = e.Timestamp.LocalDateTime,
+                    LevelEnum = (LogLevelEnum)Enum.Parse(typeof(LogLevelEnum), e.Level.ToString(), true),
+                    Message = e.RenderMessage() ?? string.Empty
                 };
 
-                // --- Begrenzung aktivieren ---
-                if (Entries.Count >= MaxEntries)
+                _ui.Post(_ =>
                 {
-                    // Alte Zeilen entfernen (meist FIFO: die ersten löschen)
-                    Entries.RemoveAt(0);
-                }
-
-                Entries.Add(entry);
+                    if (Entries.Count > 2000) Entries.RemoveAt(0);
+                    Entries.Add(entry);
+                }, null);
             }
+
         }
 
 
@@ -100,7 +101,7 @@ namespace AmiumScripter
         public static void FatalMsg(string msg, Exception ex = null)
         {
             Debug.WriteLine($"[FATAL] {msg}");
-            Debug.WriteLine(ex.Message);
+            if(ex != null) Debug.WriteLine(ex.Message);
             Log.Fatal(ex, msg);
         }
     }

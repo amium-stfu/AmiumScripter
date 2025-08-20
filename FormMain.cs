@@ -38,16 +38,26 @@ namespace AmiumScripter
         {
             dummyPageCounter = 0;
             dummySignalCounter = 0;
-            string dummy = DateTime.Now.ToString("yyyyMMddHHmmss");
-
-            string name = "MyProject_v." + dummy;
+            string name = "MyProject_v." + DateTime.Now.ToString("yyyyMMddHHmmss");
 
             if (EditValue.WithKeyboardDialog(ref name, "Enter Project Name"))
+            {
+                Logger.DebugMsg("[FormMain] Button AddProjectDialog confirmed");
                 ProjectManager.CreateProject(name);
+            }
+            else
+            {
+                Logger.DebugMsg("[FormMain] Button AddProjectDialog canceled");
+            }
         }
 
         private void btnBuild_Click(object sender, EventArgs e)
         {
+            if (ProjectManager.Project == null)
+            {
+                MessageBox.Show("No project loaded. Please create or load a project first.");
+                return;
+            }
             ProjectManager.BuildProject();
         }
 
@@ -128,6 +138,20 @@ namespace AmiumScripter
             FormSignalPool signalPoolForm = new FormSignalPool();
             signalPoolForm.Show();
 
+        }
+
+        private void btnAddStringSignal_Click(object sender, EventArgs e)
+        {
+            string name = "";
+
+            if (EditValue.WithKeyboardDialog(ref name, "Enter Control Name"))
+            {
+                UIEditor.AddStringSignalControl(
+                name: name,
+                page: UIEditor.CurrentPageName,
+                source: "Motor.Temperature" // SourceName im SignalView
+                );
+            }
         }
     }
 

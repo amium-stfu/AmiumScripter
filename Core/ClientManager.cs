@@ -38,7 +38,8 @@ namespace AmiumScripter.Core
             if (!ClientManager.IsRegistered(this))
                 throw new InvalidOperationException("Unauthorized SignalClient!");
 
-            var fullName = $"{Name}_{signal.Name}";
+          //  var fullName = $"{Name}_{signal.Name}";
+            var fullName = $"{signal.Name}";
 
             if (direct)
                 SignalManager.SetImmediate(fullName, signal);
@@ -68,6 +69,7 @@ namespace AmiumScripter.Core
 
         internal static void Register(IClient client)
         {
+          Logger.DebugMsg($"[ClientManager] Register {client.GetType().Name} ({client.Name})");
             if (!_clients.Contains(client))
                 _clients.Add(client);
         }

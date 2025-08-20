@@ -8,21 +8,46 @@ public class AThread
     private CancellationTokenSource _cts = new();
     public bool IsRunning => _thread.IsAlive && !_cts.IsCancellationRequested;
 
+    bool done = false;
+
+    public bool IsDone
+    {
+        get => done;
+        set
+        {
+            if (value && !done)
+            {
+                done = true;
+                Logger.DebugMsg($"[AThread] {InstanceName} marked as done.");
+            }
+        }
+    }
+
+    public bool IsStoppRequest => _cts.IsCancellationRequested;
+
     public AThread(string instanceName, Action work, bool isBackground = true)
     {
         InstanceName = instanceName;
 
         _thread = new Thread(() =>
         {
-            try { work(); }
+            
+            try {
+            done = false;
+                work(); 
+            done = true;
+            }
             catch (OperationCanceledException)
             {
                 Logger.DebugMsg($"[AThread] {InstanceName} cancelled.");
+                done = true;
             }
             catch (Exception ex)
             {
                 Logger.DebugMsg($"[AThread] {InstanceName} error: {ex.Message}");
+                done = true;
             }
+
         });
         _thread.IsBackground = isBackground;
 
@@ -43,6 +68,16 @@ public class AThread
         }
     }
 
+    public void Wait(int milliSeconds)
+    {
+        DateTime start = DateTime.Now;
+        while (DateTime.Now < start.AddMilliseconds(milliSeconds))
+        {
+            if (IsStoppRequest || !IsRunning) break;
+            System.Threading.Thread.Sleep(5);
+        }
+    }
+
     public void Stop()
     {
         if (_thread == null || !_thread.IsAlive)
@@ -51,7 +86,7 @@ public class AThread
         Logger.DebugMsg($"[AThread] Stop requested: {InstanceName}");
 
         _cts.Cancel();
-        if (!_thread.Join(2000))
+        if (!_thread.Join(5000))
         {
             Logger.DebugMsg($"[AThread] Still running after Cancel: {InstanceName} — trying Interrupt...");
             _thread.Interrupt();
@@ -63,7 +98,9 @@ public class AThread
             }
         }
 
+
         Logger.DebugMsg($"✅ [AThread] Cleanly stopped: {InstanceName}");
+        done = true;
         ThreadsManager.Deregister(this);
     }
 }

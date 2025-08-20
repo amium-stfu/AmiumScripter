@@ -1,6 +1,7 @@
 ﻿using AmiumScripter;
 using AmiumScripter.Core;
 using AmiumScripter.UI;
+using Microsoft.VisualBasic.Devices;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -97,11 +98,13 @@ namespace AmiumScripter.Helpers
             {
                 if (edit.ShowDialog() == DialogResult.OK)
                 {
+                    Logger.DebugMsg("[EditValue] WithNumPadDialog result: " + edit.DialogResult);
                     doubleValue = localValue;
                     return true;
                 }
                 else
                 {
+                    Logger.DebugMsg("[EditValue] WithNumPadDialog result: " + edit.DialogResult);
                     return false;
                 }
             }
@@ -111,22 +114,23 @@ namespace AmiumScripter.Helpers
         {
             string localValue = stringValue;
 
-            using (Keyboard keyboard = new Keyboard(
+            using (AmiumScripter.UI.Keyboard keyboard = new AmiumScripter.UI.Keyboard(
                 getter: () => localValue,
                 setter: (val) => localValue = val,
                 text: text
             ))
             {
                 keyboard.Qertz();
-                keyboard.ShowNumblock();
-
+ 
                 if (keyboard.ShowDialog() == DialogResult.OK)
                 {
+                    Logger.DebugMsg("[EditValue] WithKeyboardDialog result: " + keyboard.DialogResult);
                     stringValue = localValue;
                     return true;
                 }
                 else
                 {
+                    Logger.DebugMsg("[EditValue] WithKeyboardDialog result: " + keyboard.DialogResult);
                     return false;
                 }
             }

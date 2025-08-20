@@ -15,6 +15,7 @@ namespace AmiumScripter.Core
 {
     public interface IPage
     {
+        string Name { get; }
         void Initialize();
         void Run();
         void Destroy();
@@ -72,6 +73,7 @@ namespace AmiumScripter.Pages.{pageName}
 {{
     public class Page_{pageName} : IPage
     {{
+        public string Name {{get;}}= ""{pageName}""; 
 
         public void Initialize()
             {{ 
@@ -169,10 +171,10 @@ namespace AmiumScripter.Pages.{pageName}
 {{
  public class View_{pageName}: BaseView
     {{
-        
+        Page_{pageName} Page = Project.{pageName};
         public override void Initialize()
         {{ 
-            PageControls.AddControls(this); 
+            View.AddControls(this); 
             Logger.DebugMsg(""[PageView] {pageName} Initialize"");
         }}
 
@@ -207,7 +209,7 @@ using AmiumScripter.Pages.{pageName}.Classes;
 
 namespace AmiumScripter.Pages.{pageName}
 {{
- public static class PageControls
+ public static class View
     {{
          //#BEGIN-AUTO-ADD-CONTROLS
 
@@ -295,8 +297,8 @@ namespace AmiumScripter.Pages.{pageName}
             code.Add("        }");
             code.Add("        public static void Destroy()");
             code.Add("        {");
-            code.Add("            foreach (var page in Pages.Values) page.Destroy();");
             code.Add("            foreach (var view in Views.Values) view.Destroy();");
+            code.Add("            foreach (var page in Pages.Values) page.Destroy();");
             code.Add("        }");
             code.Add("    }");
             code.Add("}");

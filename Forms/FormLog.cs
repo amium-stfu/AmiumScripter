@@ -81,25 +81,56 @@ namespace AmiumScripter.Forms
 
         void ApplyFilter()
         {
-            var entries = Logger.winFormsSink.Entries;
+            // Läuft im UI-Thread!
+            var snap = Logger.winFormsSink.Entries.ToList(); // snapshot
 
-            // Wenn "all" aktiviert ist, zeige alle Einträge
             if (all)
             {
-                dataGridView1.DataSource = entries;
+                // Nur einmal binden, nicht bei jedem Tick neu setzen
+                if (!ReferenceEquals(dataGridView1.DataSource, Logger.winFormsSink.Entries))
+                    dataGridView1.DataSource = Logger.winFormsSink.Entries;
                 return;
             }
 
-            // Ansonsten filtern wir explizit nach den Flags
-            var filtered = entries.Where(x =>
+            var filtered = snap.Where(x =>
                 (debug && x.Level.Equals("Debug", StringComparison.OrdinalIgnoreCase)) ||
                 (info && x.Level.Equals("Information", StringComparison.OrdinalIgnoreCase)) ||
                 (warning && x.Level.Equals("Warning", StringComparison.OrdinalIgnoreCase)) ||
                 (fatal && (x.Level.Equals("Fatal", StringComparison.OrdinalIgnoreCase) || x.Level.Equals("Error", StringComparison.OrdinalIgnoreCase)))
             ).ToList();
 
-            dataGridView1.DataSource = new BindingList<LogEntry>(filtered);
+            SetDataSourceSafe(filtered); // dein Invoke-Safe Setter
         }
+
+
+        private void SetDataSourceSafe(IList<LogEntry> filtered)
+        {
+            void SetIt()
+            {
+                if (dataGridView1.IsDisposed) return;
+                dataGridView1.SuspendLayout();
+
+                // (optional) Scroll-Pos merken
+                int first = -1;
+                try { first = dataGridView1.FirstDisplayedScrollingRowIndex; } catch { }
+
+                dataGridView1.DataSource = new BindingList<LogEntry>(filtered);
+
+                // (optional) Scroll-Pos zurück
+                if (first >= 0 && first < dataGridView1.RowCount)
+                    dataGridView1.FirstDisplayedScrollingRowIndex = first;
+
+                dataGridView1.ResumeLayout();
+            }
+
+            if (!dataGridView1.IsHandleCreated || dataGridView1.Disposing || dataGridView1.IsDisposed) return;
+
+            if (dataGridView1.InvokeRequired)
+                dataGridView1.BeginInvoke((Action)SetIt);
+            else
+                SetIt();
+        }
+
 
         private void FormLog_FormClosing(object sender, FormClosingEventArgs e)
         {

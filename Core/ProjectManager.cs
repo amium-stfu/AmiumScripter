@@ -73,6 +73,8 @@ namespace AmiumScripter.Core
         }
         public static void CreateProject(string projectName)
         {
+
+            Logger.InfoMsg($"[ProjectManager] Creating project {projectName}");
             string vsSetting = @"{
   ""files.exclude"": {
     ""**/*.sln"": true,
@@ -103,7 +105,7 @@ namespace AmiumScripter.Core
 
 }";
             string path = Path.Combine(Path.GetTempPath(), "Project_" + projectName + "_" + Guid.NewGuid());
-            //  string tempDir = Path.Combine(Path.GetTempPath(), "Project_" + name);
+            Logger.InfoMsg($"[ProjectManager] Workspace '{path}'");
             Directory.CreateDirectory(path);
 
           //  string path = GetProjectPath(projectName);
@@ -184,8 +186,6 @@ namespace AmiumScripter.Shared.Classes
                 }
             }
         }
-
-
 
         public static void LoadFromAScript()
         {
@@ -317,10 +317,7 @@ namespace AmiumScripter.Shared.Classes
 
         public static void BuildProject()
         {
-            UIEditor.Reset();
-            SignalStorageSerializer.LoadFromJson();
-            ClassRuntimeManager.ClearAll();
-            ThreadsManager.StopAll();
+            StopProject();
 
             ProjectBuilder.GenerateDynamicProjectFile(Project.Workspace, Project.Name);
 
@@ -366,7 +363,11 @@ namespace AmiumScripter.Shared.Classes
             ThreadsManager.StopAll();
             TokenManager.CancelAll();
             TasksManager.StopAll();
+            TimerManager.StopAll();
+            SocketManager.CloseAll();
+            FileSystemWatcherManager.StopAll();
             ClassRuntimeManager.ClearAll();
+            ClientManager.DestroyAll();
             UIEditor.Reset();
             PageManager.Pages?.Clear();
             UIEditor.PageView?.Clear();
@@ -678,7 +679,7 @@ namespace AmiumScripter.Shared.Classes
 
                 if (!result.Success)
                 {
-                    Logger.FatalMsg("❌ Build-Fehler:");
+                    Logger.FatalMsg("Build-Fehler:");
                     foreach (var d in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
                         Logger.FatalMsg($"  ➤ {d}");
                     return false;

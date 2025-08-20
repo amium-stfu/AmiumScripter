@@ -91,7 +91,7 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 17.5F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 17.5F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 17.5F));
-            tableLayoutPanel1.Size = new Size(142, 218);
+            tableLayoutPanel1.Size = new Size(138, 214);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // tbResult
@@ -104,7 +104,7 @@
             tbResult.Location = new Point(4, 3);
             tbResult.Margin = new Padding(4, 3, 4, 3);
             tbResult.Name = "tbResult";
-            tbResult.Size = new Size(134, 32);
+            tbResult.Size = new Size(130, 32);
             tbResult.TabIndex = 15;
             tbResult.KeyDown += tbResult_KeyDown;
             tbResult.KeyPress += tbResult_KeyPress;
@@ -113,10 +113,10 @@
             // 
             btnU4.Dock = DockStyle.Fill;
             btnU4.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btnU4.Location = new Point(109, 35);
+            btnU4.Location = new Point(106, 35);
             btnU4.Margin = new Padding(4, 3, 4, 3);
             btnU4.Name = "btnU4";
-            btnU4.Size = new Size(29, 26);
+            btnU4.Size = new Size(28, 26);
             btnU4.TabIndex = 16;
             btnU4.Text = "u4";
             btnU4.UseVisualStyleBackColor = true;
@@ -128,7 +128,7 @@
             btnU1.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
             btnU1.Location = new Point(3, 35);
             btnU1.Name = "btnU1";
-            btnU1.Size = new Size(29, 26);
+            btnU1.Size = new Size(28, 26);
             btnU1.TabIndex = 17;
             btnU1.Text = "u1";
             btnU1.UseVisualStyleBackColor = true;
@@ -138,9 +138,9 @@
             // 
             btn1.Dock = DockStyle.Fill;
             btn1.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn1.Location = new Point(3, 143);
+            btn1.Location = new Point(3, 141);
             btn1.Name = "btn1";
-            btn1.Size = new Size(29, 32);
+            btn1.Size = new Size(28, 31);
             btn1.TabIndex = 17;
             btn1.Text = "1";
             btn1.UseVisualStyleBackColor = true;
@@ -149,9 +149,9 @@
             // 
             btn2.Dock = DockStyle.Fill;
             btn2.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btn2.Location = new Point(38, 143);
+            btn2.Location = new Point(37, 141);
             btn2.Name = "btn2";
-            btn2.Size = new Size(29, 32);
+            btn2.Size = new Size(28, 31);
             btn2.TabIndex = 17;
             btn2.Text = "2";
             btn2.UseVisualStyleBackColor = true;
@@ -161,9 +161,9 @@
             // 
             btn3.Dock = DockStyle.Fill;
             btn3.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn3.Location = new Point(73, 143);
+            btn3.Location = new Point(71, 141);
             btn3.Name = "btn3";
-            btn3.Size = new Size(29, 32);
+            btn3.Size = new Size(28, 31);
             btn3.TabIndex = 17;
             btn3.Text = "3";
             btn3.UseVisualStyleBackColor = true;
@@ -173,9 +173,9 @@
             // 
             btn4.Dock = DockStyle.Fill;
             btn4.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn4.Location = new Point(3, 105);
+            btn4.Location = new Point(3, 104);
             btn4.Name = "btn4";
-            btn4.Size = new Size(29, 32);
+            btn4.Size = new Size(28, 31);
             btn4.TabIndex = 17;
             btn4.Text = "4";
             btn4.UseVisualStyleBackColor = true;
@@ -185,9 +185,9 @@
             // 
             btn5.Dock = DockStyle.Fill;
             btn5.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn5.Location = new Point(38, 105);
+            btn5.Location = new Point(37, 104);
             btn5.Name = "btn5";
-            btn5.Size = new Size(29, 32);
+            btn5.Size = new Size(28, 31);
             btn5.TabIndex = 17;
             btn5.Text = "5";
             btn5.UseVisualStyleBackColor = true;
@@ -197,9 +197,9 @@
             // 
             btn6.Dock = DockStyle.Fill;
             btn6.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn6.Location = new Point(73, 105);
+            btn6.Location = new Point(71, 104);
             btn6.Name = "btn6";
-            btn6.Size = new Size(29, 32);
+            btn6.Size = new Size(28, 31);
             btn6.TabIndex = 17;
             btn6.Text = "6";
             btn6.UseVisualStyleBackColor = true;
@@ -211,7 +211,7 @@
             btn7.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
             btn7.Location = new Point(3, 67);
             btn7.Name = "btn7";
-            btn7.Size = new Size(29, 32);
+            btn7.Size = new Size(28, 31);
             btn7.TabIndex = 17;
             btn7.Text = "7";
             btn7.UseVisualStyleBackColor = true;
@@ -221,9 +221,9 @@
             // 
             btn8.Dock = DockStyle.Fill;
             btn8.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn8.Location = new Point(38, 67);
+            btn8.Location = new Point(37, 67);
             btn8.Name = "btn8";
-            btn8.Size = new Size(29, 32);
+            btn8.Size = new Size(28, 31);
             btn8.TabIndex = 17;
             btn8.Text = "8";
             btn8.UseVisualStyleBackColor = true;
@@ -233,9 +233,9 @@
             // 
             btn9.Dock = DockStyle.Fill;
             btn9.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn9.Location = new Point(73, 67);
+            btn9.Location = new Point(71, 67);
             btn9.Name = "btn9";
-            btn9.Size = new Size(29, 32);
+            btn9.Size = new Size(28, 31);
             btn9.TabIndex = 17;
             btn9.Text = "9";
             btn9.UseVisualStyleBackColor = true;
@@ -245,9 +245,9 @@
             // 
             btnU2.Dock = DockStyle.Fill;
             btnU2.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btnU2.Location = new Point(38, 35);
+            btnU2.Location = new Point(37, 35);
             btnU2.Name = "btnU2";
-            btnU2.Size = new Size(29, 26);
+            btnU2.Size = new Size(28, 26);
             btnU2.TabIndex = 17;
             btnU2.Text = "u2";
             btnU2.UseVisualStyleBackColor = true;
@@ -257,9 +257,9 @@
             // 
             btnU3.Dock = DockStyle.Fill;
             btnU3.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btnU3.Location = new Point(73, 35);
+            btnU3.Location = new Point(71, 35);
             btnU3.Name = "btnU3";
-            btnU3.Size = new Size(29, 26);
+            btnU3.Size = new Size(28, 26);
             btnU3.TabIndex = 17;
             btnU3.Text = "u3";
             btnU3.UseVisualStyleBackColor = true;
@@ -270,9 +270,9 @@
             tableLayoutPanel1.SetColumnSpan(btn0, 2);
             btn0.Dock = DockStyle.Fill;
             btn0.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btn0.Location = new Point(3, 181);
+            btn0.Location = new Point(3, 178);
             btn0.Name = "btn0";
-            btn0.Size = new Size(64, 34);
+            btn0.Size = new Size(62, 33);
             btn0.TabIndex = 17;
             btn0.Text = "0";
             btn0.UseVisualStyleBackColor = true;
@@ -282,9 +282,9 @@
             // 
             btnComma.Dock = DockStyle.Fill;
             btnComma.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            btnComma.Location = new Point(73, 181);
+            btnComma.Location = new Point(71, 178);
             btnComma.Name = "btnComma";
-            btnComma.Size = new Size(29, 34);
+            btnComma.Size = new Size(28, 33);
             btnComma.TabIndex = 17;
             btnComma.Text = ".";
             btnComma.UseVisualStyleBackColor = true;
@@ -294,9 +294,9 @@
             // 
             btnOk.Dock = DockStyle.Fill;
             btnOk.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold);
-            btnOk.Location = new Point(108, 181);
+            btnOk.Location = new Point(105, 178);
             btnOk.Name = "btnOk";
-            btnOk.Size = new Size(31, 34);
+            btnOk.Size = new Size(30, 33);
             btnOk.TabIndex = 17;
             btnOk.Text = "btnU1";
             btnOk.UseVisualStyleBackColor = true;
@@ -306,9 +306,9 @@
             // 
             btnPlusMinus.Dock = DockStyle.Fill;
             btnPlusMinus.Font = new Font("Microsoft Sans Serif", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnPlusMinus.Location = new Point(108, 105);
+            btnPlusMinus.Location = new Point(105, 104);
             btnPlusMinus.Name = "btnPlusMinus";
-            btnPlusMinus.Size = new Size(31, 32);
+            btnPlusMinus.Size = new Size(30, 31);
             btnPlusMinus.TabIndex = 17;
             btnPlusMinus.Text = "btnU1";
             btnPlusMinus.UseVisualStyleBackColor = true;
@@ -318,9 +318,9 @@
             // 
             btnDel.Dock = DockStyle.Fill;
             btnDel.Font = new Font("Calibri", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnDel.Location = new Point(108, 67);
+            btnDel.Location = new Point(105, 67);
             btnDel.Name = "btnDel";
-            btnDel.Size = new Size(31, 32);
+            btnDel.Size = new Size(30, 31);
             btnDel.TabIndex = 17;
             btnDel.Text = "DEL";
             btnDel.UseVisualStyleBackColor = true;
@@ -330,9 +330,9 @@
             // 
             btnExit.Dock = DockStyle.Fill;
             btnExit.Font = new Font("Microsoft Sans Serif", 15.75F, FontStyle.Bold);
-            btnExit.Location = new Point(108, 143);
+            btnExit.Location = new Point(105, 141);
             btnExit.Name = "btnExit";
-            btnExit.Size = new Size(31, 32);
+            btnExit.Size = new Size(30, 31);
             btnExit.TabIndex = 17;
             btnExit.Text = "btnU1";
             btnExit.UseVisualStyleBackColor = true;
@@ -344,7 +344,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             AutoSize = true;
             BackColor = Color.White;
-            ClientSize = new Size(142, 218);
+            ClientSize = new Size(138, 214);
             ControlBox = false;
             Controls.Add(tableLayoutPanel1);
             FormBorderStyle = FormBorderStyle.FixedSingle;

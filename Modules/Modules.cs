@@ -195,10 +195,11 @@ namespace AmiumScripter.Modules
             }
         }
         public StringSignal() { }
-        public StringSignal(string name, string text = null, bool register = true)
+        public StringSignal(string name, string text = null,string value = null, bool register = true)
         {
             this.register = register;
             Name = name;
+            Value = value ?? "NA";
             SetProperty("text", text ?? "#" + name);
             if (!name.EndsWith(".WriteSet"))
                 WriteSet = new StringSignal(name + ".WriteSet", this.Text + " WriteSet");

@@ -45,9 +45,10 @@
             tabPage1 = new TabPage();
             tabPage2 = new TabPage();
             panel2 = new Panel();
+            btnSignalPool = new Button();
             btnLog = new Button();
             btnAddSignal = new Button();
-            btnSignalPool = new Button();
+            btnAddStringSignal = new Button();
             tableLayoutPanel1.SuspendLayout();
             panel1.SuspendLayout();
             Book.SuspendLayout();
@@ -246,6 +247,7 @@
             // 
             // panel2
             // 
+            panel2.Controls.Add(btnAddStringSignal);
             panel2.Controls.Add(btnSignalPool);
             panel2.Controls.Add(btnLog);
             panel2.Controls.Add(btnAddSignal);
@@ -255,6 +257,17 @@
             panel2.Name = "panel2";
             panel2.Size = new Size(207, 677);
             panel2.TabIndex = 2;
+            // 
+            // btnSignalPool
+            // 
+            btnSignalPool.Dock = DockStyle.Bottom;
+            btnSignalPool.Location = new Point(0, 607);
+            btnSignalPool.Name = "btnSignalPool";
+            btnSignalPool.Size = new Size(207, 23);
+            btnSignalPool.TabIndex = 7;
+            btnSignalPool.Text = "SignalPool";
+            btnSignalPool.UseVisualStyleBackColor = true;
+            btnSignalPool.Click += btnSignalPool_Click;
             // 
             // btnLog
             // 
@@ -278,16 +291,16 @@
             btnAddSignal.UseVisualStyleBackColor = true;
             btnAddSignal.Click += btnAddSignal_Click;
             // 
-            // btnSignalPool
+            // btnAddStringSignal
             // 
-            btnSignalPool.Dock = DockStyle.Bottom;
-            btnSignalPool.Location = new Point(0, 607);
-            btnSignalPool.Name = "btnSignalPool";
-            btnSignalPool.Size = new Size(207, 23);
-            btnSignalPool.TabIndex = 7;
-            btnSignalPool.Text = "SignalPool";
-            btnSignalPool.UseVisualStyleBackColor = true;
-            btnSignalPool.Click += btnSignalPool_Click;
+            btnAddStringSignal.Dock = DockStyle.Top;
+            btnAddStringSignal.Location = new Point(0, 23);
+            btnAddStringSignal.Name = "btnAddStringSignal";
+            btnAddStringSignal.Size = new Size(207, 23);
+            btnAddStringSignal.TabIndex = 8;
+            btnAddStringSignal.Text = "Add StringSignal";
+            btnAddStringSignal.UseVisualStyleBackColor = true;
+            btnAddStringSignal.Click += btnAddStringSignal_Click;
             // 
             // FormMain
             // 
@@ -326,5 +339,6 @@
         private Button btnAddDll;
         private Button btnLog;
         private Button btnSignalPool;
+        private Button btnAddStringSignal;
     }
 }

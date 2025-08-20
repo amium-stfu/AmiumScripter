@@ -67,7 +67,7 @@ namespace AmiumScripter.Core
 
 
         // EditControls.cs-----
-        public static void UpdateControlsCs(string filePath, List<string> controlInitLines, string controlName)
+        public static void UpdateControlsCs(string filePath, List<string> controlInitLines, string controlName, string controlType)
         {
             var beginDeclTag = "//#BEGIN-AUTO-ADD-CONTROLS";
             var endDeclTag = "//#END-AUTO-ADD-CONTROLS";
@@ -93,9 +93,9 @@ namespace AmiumScripter.Core
                 if (line.Contains(endDeclTag))
                 {
                     // Add new control declaration before closing tag, if not already present
-                    if (!originalLines.Any(l => l.Contains($"public static SignalView {controlName};")))
+                    if (!originalLines.Any(l => l.Contains($"public static {controlType} {controlName};")))
                     {
-                        output.Add($"        public static SignalView {controlName};");
+                        output.Add($"        public static {controlType} {controlName};");
                     }
                     insideDeclBlock = false;
                     output.Add(line);
@@ -119,9 +119,9 @@ namespace AmiumScripter.Core
                 if (line.Contains(endInitTag))
                 {
                     // Add new control initialization before closing tag, if not already present
-                    if (!originalLines.Any(l => l.Contains($"{controlName} = new SignalView")))
+                    if (!originalLines.Any(l => l.Contains($"{controlName} = new {controlType}")))
                     {
-                        output.Add($"            {controlName} = new SignalView");
+                        output.Add($"            {controlName} = new {controlType}");
                         output.Add("            {");
                         foreach (var ctrlLine in controlInitLines)
                             output.Add("                " + ctrlLine);
@@ -243,9 +243,8 @@ namespace AmiumScripter.Core
 
             var controlLines = AddSignalControlLines(name, source);
             var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
-            UpdateControlsCs(filePath, controlLines, name);
+            UpdateControlsCs(filePath, controlLines, name, "SignalView");
         }
-
         static List<string> AddSignalControlLines(string name, string source)
         {
             return new List<string>
@@ -265,9 +264,44 @@ namespace AmiumScripter.Core
 
         // SignalControl End-----
 
-        public static void UpdateControlPosition(string page, string controlName, int x, int y)
+        // StringSignalControl-----
+        public static void AddStringSignalControl(string name, string page, string source = "")
+        {
+            name = name.Replace(" ", "_").Replace("-", "_").Replace(".", "_");
+            if (!name.StartsWith("Ctr"))
+                name = "Ctr" + name;
+
+            if (ControlExists(name, page))
+            {
+                MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
+                return;
+            }
+
+            var controlLines = AddStringSignalControlLines(name, source);
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "StringSignalView");
+        }
+        static List<string> AddStringSignalControlLines(string name, string source)
+        {
+            return new List<string>
+    {
+        $"    Name = \"{name}\",",
+        $"    Location = new Point(10, 10),",
+        $"    Size = new Size(200, 100),",
+        $"    BorderColor = Color.Black,",
+        $"    SignalText = \"{name.Replace("Ctr","")}\",",
+        $"    SignalValue = \"udef\",",
+        $"    SourceName = \"{source}\"",
+
+    };
+        }
+
+        // SignalControl End-----
+
+        public static void UpdateControlPosition(string page, string controlName, string controlType, int x, int y)
         {
             Debug.WriteLine("Update Control " + controlName);
+            Debug.WriteLine("Type " + controlType);
             Debug.WriteLine("X " + x);            
             Debug.WriteLine("Y " + y);
             var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
@@ -281,7 +315,7 @@ namespace AmiumScripter.Core
                 Debug.WriteLine("File found");
             }
 
-                var lines = File.ReadAllLines(filePath).ToList();
+            var lines = File.ReadAllLines(filePath).ToList();
             var output = new List<string>();
 
             bool insideTargetBlock = false;
@@ -291,7 +325,7 @@ namespace AmiumScripter.Core
             {
                 var trimmed = line.Trim();
 
-                if (!insideTargetBlock && trimmed.StartsWith($"{controlName} = new SignalView"))
+                if (!insideTargetBlock && trimmed.StartsWith($"{controlName} = new {controlType}"))
                 {
                     Debug.WriteLine("Control found");
                     insideTargetBlock = true;
@@ -324,7 +358,7 @@ namespace AmiumScripter.Core
                 }
             }
 
-                                 File.WriteAllLines(filePath, output);
+            File.WriteAllLines(filePath, output);
         }
 
 

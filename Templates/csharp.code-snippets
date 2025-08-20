@@ -34,12 +34,75 @@
     ]
   },
   "AThread Initialisierung": {
-  "prefix": "_AThread",
-  "description": "Erzeugt eine neue AThread-Instanz mit Hintergrundoption",
-  "body": [
-    "AThread ${1:Name} = new AThread(instanceName: \"${2:MyThread}\", work: () => ${3:MyMethod}(), isBackground: ${4:true});"
-  ]
-}
+    "prefix": "_AThread",
+    "description": "Erzeugt eine neue AThread-Instanz mit Hintergrundoption",
+    "body": [
+      "AThread ${1:Name} = new AThread(instanceName: \"${2:MyThread}\", work: () => ${3:MyMethod}(), isBackground: ${4:true});"
+    ]
+  },
+  "ATimerUI Initialisierung": {
+    "prefix": "_ATimerUI",
+    "description": "Erzeugt eine neue ATimerUI-Instanz mit Event-Handler",
+    "body": [
+      "ATimerUI ${1:timerUI} = new ATimerUI(",
+      "    name: \"${2:MyUITimer}\",",
+      "    intervalMs: ${3:1000}",
+      ");",
+      "${1:timerUI}.Tick += () => { ${4:// TODO: UI Timer Tick Handler} };",
+      "${1:timerUI}.Start();"
+    ]
+  },
+  "ATimerPage Initialisierung": {
+    "prefix": "_ATimerPage",
+    "description": "Erzeugt eine neue ATimerPage-Instanz mit Event-Handler",
+    "body": [
+      "ATimerPage ${1:timerPage} = new ATimerPage(",
+      "    name: \"${2:MyPageTimer}\",",
+      "    intervalMs: ${3:1000}",
+      ");",
+      "${1:timerPage}.Tick += () => { ${4:// TODO: Page Timer Tick Handler} };",
+      "${1:timerPage}.Start();"
+    ]
+  },
+  "ATimerHighPrecision Initialisierung": {
+    "prefix": "_ATimerHighPrecision",
+    "description": "Erzeugt eine neue ATimerHighPrecision-Instanz mit Event-Handler",
+    "body": [
+      "ATimerHighPrecision ${1:timerHP} = new ATimerHighPrecision(",
+      "    name: \"${2:MyHighPrecisionTimer}\",",
+      "    intervalMs: ${3:5}",
+      ");",
+      "${1:timerHP}.Tick += () => { ${4:// TODO: High Precision Tick Handler} };",
+      "${1:timerHP}.Start();"
+    ]
+  },
+  "TcpConnection Initialisierung": {
+    "prefix": "_TcpConnection",
+    "description": "Erzeugt und registriert eine TCP-Verbindung im SocketManager",
+    "body": [
+      "TcpClient ${1:client} = new TcpClient(${2:hostname}, ${3:port});",
+      "TcpConnection ${4:tcpConn} = new TcpConnection(",
+      "    name: \"${5:MyDevice}\",",
+      "    client: ${1:client}",
+      ");"
+    ]
+  },
+  "ManagedFileSystemWatcher Initialisierung": {
+    "prefix": "_AFileSystemWatcher",
+    "description": "Erzeugt einen verwalteten FileSystemWatcher und registriert ihn beim Manager",
+    "body": [
+      "AFileSystemWatcher ${1:watcher} = new AFileSystemWatcher(",
+      "    name: \"${2:MyWatcher}\",",
+      "    path: \"${3:C:\\\\Pfad\\\\Zum\\\\Ordner}\",",
+      "    filter: \"${4:*.*}\"",
+      ");",
+      "${1:watcher}.Inner.Changed += (s, e) => { ${5:// TODO: Handler} };",
+      "${1:watcher}.Start();"
+    ]
+  }
 
-  
+
+
+
+
 }

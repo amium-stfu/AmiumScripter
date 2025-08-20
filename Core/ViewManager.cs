@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
@@ -20,21 +19,31 @@ namespace AmiumScripter.Core
     }
     public abstract class BaseView : UserControl, IView
     {
-
-        public AThread IdleLoop;
+        private System.Windows.Forms.Timer idleTimer;
         int Interval = 100;
+
         public void StartIdleLoop(int interval)
         {
             Interval = interval;
-            if (IdleLoop != null && IdleLoop.IsRunning) return;
+            if (idleTimer != null)
+                return;
 
-            IdleLoop = new("updateView", () => _idle(), true);
+            idleTimer = new System.Windows.Forms.Timer();
+            idleTimer.Interval = Interval;
+            idleTimer.Tick += (s, e) => ViewIdleLoop();
+            idleTimer.Start();
+            Logger.DebugMsg("[PageView] Start IdleLoop (Timer)");
+        }
 
-            if (IdleLoop == null || !IdleLoop.IsRunning)
+        public void StopIdleLoop()
+        {
+            if (idleTimer != null)
             {
-                IdleLoop.Start();
+                idleTimer.Stop();
+                idleTimer.Dispose();
+                idleTimer = null;
+                Logger.DebugMsg("[PageView] IdleLoop stopped (Timer)");
             }
-            Logger.DebugMsg("[PageView] Start IdleLoop");
         }
 
         public virtual void Initialize()
@@ -45,31 +54,12 @@ namespace AmiumScripter.Core
 
         public virtual void Run() { }
 
-        public void Destroy()
+        public virtual void Destroy()
         {
+            StopIdleLoop();
             Controls.Clear();
-            Logger.DebugMsg("[PageView] TestPage Destroy");
+            Logger.DebugMsg("[PageView] TestPage Destroyed");
         }
         public virtual void ViewIdleLoop() { }
-
-        void _idle()
-        {
-            while (IdleLoop.IsRunning)
-            {
-                System.Threading.Thread.Sleep(Interval);
-                ViewIdleLoop();
-            }
-        
-        }
-
-        public void SafeInvoke(Action action)
-        {
-            if (InvokeRequired)
-                Invoke(action);
-            else
-                action();
-        }
-
-
     }
 }

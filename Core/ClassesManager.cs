@@ -23,7 +23,6 @@ namespace AmiumScripter.Core
     [SupportedOSPlatform("windows")]
     public abstract class ClassBase : IClass
     {
-
         public string InstanceName { get; init; }
 
         protected ClassBase(string instanceName)
@@ -44,7 +43,7 @@ namespace AmiumScripter.Core
 
             if (!Regex.IsMatch(className, @"^[A-Z][A-Za-z0-9_]*$"))
             {
-                MessageBox.Show("❌ Ungültiger Klassenname. Muss mit Großbuchstaben beginnen und darf nur Buchstaben/Zahlen/_ enthalten.");
+                MessageBox.Show("Ungültiger Klassenname. Muss mit Großbuchstaben beginnen und darf nur Buchstaben/Zahlen/_ enthalten.");
                 return;
             }
 
@@ -191,6 +190,7 @@ namespace {nameSpace}
 
         public static void Register(IClass instance)
         {
+            Logger.DebugMsg($"[ClassRuntimeManager] Registering instance: {instance.InstanceName}");
             _onDestroyCallbacks.Add(() =>
             {
                 instance.Destroy();

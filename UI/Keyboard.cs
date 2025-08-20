@@ -307,7 +307,9 @@ namespace AmiumScripter.UI
 
         private void Keyboard_FormClosing(object sender, FormClosingEventArgs e)
         {
-            DialogResult = DialogResult.Cancel;
+            //if (DialogResult == DialogResult.OK)
+            //DialogResult = DialogResult.Cancel;
+
         }
     }
 }
