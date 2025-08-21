@@ -38,6 +38,8 @@ namespace AmiumScripter.Modules
     [JsonDerivedType(typeof(DemoSignal), "demosignal")]
     public abstract class BaseSignalCommon
     {
+      
+        
         public string Name { get; protected set; }
         public ulong LastUpdate { get; protected set; }
         public bool register;

@@ -37,6 +37,10 @@ namespace AmiumScripter.NET
             public DateTime LastResponse { get; set; } = DateTime.MinValue;
             public long NextDueTick { get; set; }
             public bool InFlight { get; set; }
+            public long SendTimestampTicks;   // letzter tatsächlicher Sendezeitpunkt (Environment.TickCount64)
+public long RttLastMs;            // letzte Roundtrip-Zeit
+public long RttAvgMs;             // geglätteter Mittelwert
+
             public AkReader(string command, int interval)
             {
                 Command = command;
@@ -67,7 +71,7 @@ namespace AmiumScripter.NET
             {
                 if (Readers.TryGetValue(akRead, out var reader))
                 {
-                    Debug.WriteLine("Read found: " + akRead + " index: " + index);
+                  // Debug.WriteLine("Read found: " + akRead + " index: " + index);
                     return reader.GetDouble(index);
 
                 }
@@ -160,9 +164,10 @@ namespace AmiumScripter.NET
             if (string.IsNullOrWhiteSpace(command)) throw new ArgumentNullException(nameof(command));
             if (interval <= 0) throw new ArgumentOutOfRangeException(nameof(interval));
 
+            var nowTicks = Environment.TickCount64;
             var reader = new AkReader(command, interval)
             {
-                NextDueTick = Environment.TickCount64, // initial sofort
+                NextDueTick = nowTicks + interval,
                 InFlight = false
             };
 
@@ -225,7 +230,6 @@ namespace AmiumScripter.NET
             List<AkReader> snapshot;
             lock (_readerGroupsLock)
             {
-                // Gruppe könnte schon disposed sein
                 if (!_readerGroups.ContainsKey(group.Interval)) return;
                 snapshot = group.Readers.ToList();
             }
@@ -234,37 +238,52 @@ namespace AmiumScripter.NET
 
             foreach (var r in snapshot)
             {
-                // Reentrancy / InFlight respektieren
+                // Wenn noch unterwegs → NICHT NextDueTick verändern (damit überfällige sofort feuern können)
                 if (r.InFlight) continue;
 
-                // optional: einfache Drift-Korrektur
-                if (now < r.NextDueTick - 5) continue;
+                // Überfällig oder fällig?
+                if (now >= r.NextDueTick)
+                {
+                    // Nächstes Fälligkeitsziel vorwärts schieben (akkumulativ, nicht from-now),
+                    // damit wir bei Verzögerungen nicht dauerhaft Phasenverschiebung ansammeln.
+                    long target = r.NextDueTick + r.Interval;
+                    // Falls EXTREM weit hinten (z.B. > 5 Intervalle), clamp auf now + interval (Vermeidet Sturmsenden)
+                    if (target < now - (r.Interval * 5))
+                        target = now + r.Interval;
 
-                r.InFlight = true;
-                r.NextDueTick = now + r.Interval;
-                // Sequencer kümmert sich um Serialisierung
-                Transmit(r.Command, true, true);
+                    r.InFlight = true;
+                    r.SendTimestampTicks = now;
+
+                    // Jetzt erst *nach* Setzen der SendTimestamp das NextDueTick aktualisieren:
+                    r.NextDueTick = target;
+
+                    Transmit(r.Command, true, true);
+                    // Optional: Debug knapper halten
+                //    Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] SEND {r.Command} next={r.NextDueTick} now={now}");
+                }
             }
         }
         public void WriteReaderResponse(string akRead, List<string> response)
         {
-            //Debug.WriteLine("write '" + akRead + "'");
-            //Debug.WriteLine("Reader registed " + Readers.Count);
-
-          //  foreach (string r in Readers.Keys) Debug.WriteLine(r);
-
             lock (_readersLock)
             {
                 if (Readers.TryGetValue(akRead, out var reader))
                 {
-                   // Debug.WriteLine("reader found");
-                    reader.Response = response;
-                    reader.LastResponse = DateTime.Now;
-                    reader.InFlight = false; // freigeben für nächste Abfrage
-                }
-                else
-                {
-                  //  Debug.WriteLine("reader not found");
+                    var now = Environment.TickCount64;
+            if (reader.InFlight && reader.SendTimestampTicks != 0)
+            {
+                long rtt = now - reader.SendTimestampTicks;
+                reader.RttLastMs = rtt;
+                // Exponentieller gleitender Mittelwert
+                if (reader.RttAvgMs == 0) reader.RttAvgMs = rtt;
+                else reader.RttAvgMs = (reader.RttAvgMs * 7 + rtt) / 8;
+                // Debug / Diagnose optional:
+                // Debug.WriteLine($"RTT {reader.Command}: last={rtt}ms avg={reader.RttAvgMs}ms");
+            }
+
+            reader.Response = response;
+            reader.LastResponse = DateTime.Now;
+            reader.InFlight = false;
                 }
             }
         }
@@ -408,6 +427,12 @@ namespace AmiumScripter.NET
                     if (Environment.TickCount64 > _inFlightDeadline)
                     {
                         Logger.WarningMsg($"[AKClient] {Name} sequencer timeout waiting for '{_expectedVerb}'");
+                        // Versuch Reader anhand Verb wieder freigeben (verhindert dauerhafte Blockade)
+                        lock (_readersLock)
+                        {
+                            if (Readers.TryGetValue($" {_expectedVerb}{(string.IsNullOrEmpty(_expectedChannel) ? "" : " " + _expectedChannel)}", out var rd))
+                                rd.InFlight = false;
+                        }
                         _expectedVerb = null;
                         _expectedChannel = null;
                         _currentCallback = null;
@@ -787,6 +812,7 @@ namespace AmiumScripter.NET
             public byte Error { get; set; }     // optional Fehlerbyte am Anfang
             public byte? Status { get; set; }   // optional Byte direkt nach dem Befehl
             public string Raw { get; set; }
+            public string Reader { get; set; }
         }
 
         private static AkMessage ParseAkResponse(string raw, string expectedVerb, string expectedChannel)
@@ -801,7 +827,9 @@ namespace AmiumScripter.NET
                 Command = expectedVerb,
                 Parameters = Array.Empty<string>(),
                 Error = 0,
-                Status = null
+                Status = null,
+                Reader = $" {expectedVerb} {expectedChannel}"
+                
             };
 
             if (string.IsNullOrWhiteSpace(raw)) return result;
@@ -861,15 +889,18 @@ namespace AmiumScripter.NET
         // virtuelle Overload, damit der Nutzer strukturierte Messages verarbeiten kann
         protected virtual void OnMessageReceived(AkMessage msg) 
         {
-              string v = msg.Parameters[0];
-               Logger.DebugMsg($"[AKClient] {DateTime.Now.ToString("HH:mm:ss.fff")} {Name} received message: {msg.Command} {msg.Channel} {v}");
-
+            string v = (msg.Parameters.Length > 0) ? msg.Parameters[0] : "";
+            Logger.DebugMsg($"[AKClient] {DateTime.Now:HH:mm:ss.fff} {Name} received: {msg.Command} {msg.Channel} {v}");
         }
         protected virtual void OnRawMessage(string raw)
         {
             try { MessageReceived?.Invoke(this, raw); } catch { }
 }
+
+      
     }
+
+
 
     
 }

@@ -19,6 +19,8 @@ namespace AmiumScripter.NET
         private readonly int Timeout;
         private volatile bool _shouldStop = false;
 
+        public byte Error = 0;
+
         public string Address { get; private set; }
         public List<byte> resp = new();
         public bool Connected => TcpSocket != null && TcpSocket.Connected;
@@ -200,31 +202,33 @@ namespace AmiumScripter.NET
         // Server-Antworten laut deiner Spezifikation:
         // Request: " ASTZ K0"  -> Response: " ASTZ 0 SREM ASTZ" (immer ohne Channel, Status=0, Parameter SREM <Command>)
         // Wichtig: führendes Leerzeichen beibehalten falls angekommen.
+
+
         protected virtual void OnMessageReceived(AkMessage msg)
         {
-            string firstParam = msg.Parameters.Length > 0 ? msg.Parameters[0] : "";
-            Logger.DebugMsg($"[AKHost] {Name} parsed: '{msg.Raw.Replace("\r\n","")}' -> Cmd='{msg.Command}' Ch='{msg.Channel}' P0='{firstParam}'");
-
-            bool hadLeadingSpace = msg.Raw.Length > 0 && msg.Raw[0] == ' ';
-            string prefix = hadLeadingSpace ? " " : "";
+            string payload = "NA";
 
             if (msg.Command == "ASTZ")
             {
-                // Antwort ohne Channel, mit Status 0, Parameter SREM + Original-Command
-                Transmit($"{prefix}{msg.Command} 0 SREM {msg.Command}");
+                payload = "SREM SMGA";
+             
             }
             else if (msg.Command == "PING")
             {
-                // Falls PING ähnlich (ohne Channel) beantwortet werden soll:
-                Transmit($"{prefix}{msg.Command} 0 TRUE");
+                payload = "PONG";
             }
-        }
+            Transmit($"{Response}{payload}");
 
+        }
+        public string Response = string.Empty;
         private void RaiseMessage(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw)) return;
             try { MessageReceived?.Invoke(this, raw); } catch { }
             var parsed = ParseAkMessage(raw);
+
+            Response = $" {parsed.Command} {Error.ToString()} ";
+
             try { MessageParsed?.Invoke(this, parsed); } catch { }
             try { OnMessageReceived(parsed); } catch { }
         }
