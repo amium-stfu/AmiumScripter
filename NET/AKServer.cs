@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace AmiumScripter.NET
+namespace AmiumScripter.Net
 {
     public class AKServer : AClient
     {
@@ -199,25 +199,19 @@ namespace AmiumScripter.NET
             }
         }
 
-        // Server-Antworten laut deiner Spezifikation:
-        // Request: " ASTZ K0"  -> Response: " ASTZ 0 SREM ASTZ" (immer ohne Channel, Status=0, Parameter SREM <Command>)
-        // Wichtig: führendes Leerzeichen beibehalten falls angekommen.
-
-
-        protected virtual void OnMessageReceived(AkMessage msg)
+        protected virtual string OnMessageReceived(AkMessage msg)
         {
-            string payload = "NA";
-
             if (msg.Command == "ASTZ")
             {
-                payload = "SREM SMGA";
+               return "SREM SMGA";
              
             }
             else if (msg.Command == "PING")
             {
-                payload = "PONG";
+               return "PONG";
             }
-            Transmit($"{Response}{payload}");
+            return "NONE";
+           
 
         }
         public string Response = string.Empty;
@@ -230,9 +224,20 @@ namespace AmiumScripter.NET
             Response = $" {parsed.Command} {Error.ToString()} ";
 
             try { MessageParsed?.Invoke(this, parsed); } catch { }
-            try { OnMessageReceived(parsed); } catch { }
-        }
 
+            string payload = "NA";
+            try 
+            { 
+                payload = OnMessageReceived(parsed);
+                Transmit($"{Response}{payload}");
+            } 
+            catch
+            {
+                payload = "ERROR";
+                Transmit($"{Response}{payload}");
+
+            }
+        }
         private static AkMessage ParseAkMessage(string raw)
         {
             var msg = new AkMessage
@@ -242,7 +247,7 @@ namespace AmiumScripter.NET
                 Channel = null,
                 Parameters = Array.Empty<string>()
             };
-            var s = raw; // nicht trimmen, führendes Space relevant
+            var s = raw.Replace("\r\n",""); // nicht trimmen, führendes Space relevant
             if (string.IsNullOrEmpty(s)) return msg;
 
             // Für Parsing ohne führendes Space:

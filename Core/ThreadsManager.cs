@@ -93,13 +93,13 @@ public class AThread
 
             if (!_thread.Join(1000))
             {
-                Logger.DebugMsg($"❌ [AThread] Cannot stop thread {InstanceName} cleanly.");
+                Logger.DebugMsg($"[AThread] Cannot stop thread {InstanceName} cleanly.");
                 throw new InvalidOperationException($"Thread {InstanceName} refused to stop.");
             }
         }
 
 
-        Logger.DebugMsg($"✅ [AThread] Cleanly stopped: {InstanceName}");
+        Logger.DebugMsg($"[AThread] Cleanly stopped: {InstanceName}");
         done = true;
         ThreadsManager.Deregister(this);
     }

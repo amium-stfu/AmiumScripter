@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace AmiumScripter.NET
+namespace AmiumScripter.Net
 {
     /// <summary>
     /// Sequenzieller AK-Client (eine Klasse, AClient-Ableitung)
@@ -834,7 +834,7 @@ public long RttAvgMs;             // geglätteter Mittelwert
 
             if (string.IsNullOrWhiteSpace(raw)) return result;
 
-            var s = raw.TrimStart();
+            var s = raw.Replace("\r\n","").TrimStart();
             var parts = s.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0) return result;
 

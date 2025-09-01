@@ -16,10 +16,14 @@ namespace AmiumScripter.Core
 {
     public static class UIEditor
     {
+        static Panel EditorPanel = new();
+
         public static string CurrentPageName { get; set; } = "TestPage";
 
         public static Dictionary<string, BaseView> PageView = new();
         //BuildView
+
+        public static (int X, int Y, int H, int W) NewControl;
 
         public static void CreateAllViews()
         {
@@ -28,41 +32,35 @@ namespace AmiumScripter.Core
             AttachPagesViewToUI();
         }
 
-
-        public static TabControl TabControlHost { get; set; } = AmiumScripter.Root.Main.Book;
-
+        public static bool EditMode { get; set; } = false;
         public static void Reset()
         {
             foreach (BaseView view in PageView.Values)
                 view.Destroy();
             PageView.Clear();
-            AmiumScripter.Root.Main.Book.TabPages.Clear();
+           
         }
 
         public static void AttachPagesViewToUI()
         {
             CurrentPageName = null;
             Debug.WriteLine("[UIEditor] Try to Add PageViews");
-            AmiumScripter.Root.Main.Book.TabPages.Clear();
 
-            foreach (var view in PageView)
+            AmiumScripter.Root.Main.DeletePages();
+            int c = ProjectManager.Project.Pages.Count + 1;
+            foreach(string page in ProjectManager.Project.Pages.AsEnumerable().Reverse())
             {
-                Debug.WriteLine("[UIEditor] Add PageView " + view.Key);
-                view.Value.Invalidate();
-                view.Value.Dock = DockStyle.Fill;
-                view.Value.BackColor = Color.White;
-
-                var tabPage = new TabPage(view.Key);
-                tabPage.Name = view.Key;
-                CurrentPageName??= tabPage.Name;
-                tabPage.Controls.Add(view.Value);
-                AmiumScripter.Root.Main.Book.TabPages.Add(tabPage);
-
+                c--;
+                var view = PageView[page];
+                view.Name = page;
+                view.Invalidate();
+                view.Dock = DockStyle.Fill;
+                view.BackColor = Color.White;
+                string text = view.PageText;
+                view.BorderStyle = BorderStyle.FixedSingle;
+                AmiumScripter.Root.Main.AddPageToUI(text, view, c);
             }
-
-           // MessageBox.Show($"Aktuelle Seite: {UIEditor.CurrentPageName}");
         }
-
         //BuildView End
 
 
@@ -229,43 +227,81 @@ namespace AmiumScripter.Core
 
 
         // SignalControl-----
-        public static void AddSignalControl(string name, string page, string source = "")
+        public static void AddSignalControl(string name, string page, string source = "", int x = 0, int y = 0, int h = 100, int w = 200)
         {
             name = name.Replace(" ", "_").Replace("-", "_").Replace(".", "_");
-            if (!name.StartsWith("Ctr"))
-                name = "Ctr" + name;
-
+         
             if (ControlExists(name, page))
             {
                 MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
                 return;
             }
 
-            var controlLines = AddSignalControlLines(name, source);
-            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
-            UpdateControlsCs(filePath, controlLines, name, "SignalView");
-        }
-        static List<string> AddSignalControlLines(string name, string source)
-        {
-            return new List<string>
+            var controlLines = new List<string>
     {
 
         $"    Name = \"{name}\",",
-        $"    Location = new Point(10, 10),",
-        $"    Size = new Size(200, 100),",
+        $"    Location = new Point({x}, {y}),",
+        $"    Size = new Size({w}, {h}),",
         $"    BorderColor = Color.Black,",
-        $"    SignalText = \"{name.Replace("Ctr","")}\",",
+        $"    SignalText = \"{name}\",",
         $"    SignalUnit = \"udef\",",
         $"    SignalValue = \"udef\",",
         $"    SourceName = \"{source}\"",
 
     };
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "SignalView");
         }
+        public static void AddModuleControl(string name, string page, string source = "", int x = 0, int y = 0, int h = 100, int w = 200)
+        {
+         
+            if (ControlExists(name, page))
+            {
+                MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
+                return;
+            }
 
-        // SignalControl End-----
+            var controlLines = new List<string>
+    {
 
-        // StringSignalControl-----
-        public static void AddStringSignalControl(string name, string page, string source = "")
+        $"    Name = \"{name}\",",
+        $"    Location = new Point({x}, {y}),",
+        $"    Size = new Size({w}, {h}),",
+        $"    BorderColor = Color.Black,",
+        $"    SignalText = \"{name}\",",
+        $"    SignalUnit = \"udef\",",
+        $"    SignalValue = \"udef\",",
+        $"    SourceName = \"{source}\"",
+
+    };
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "ModuleView");
+        }
+        public static void AddStringSignalControl(string name, string page, string source = "", int x = 0, int y = 0, int h = 100, int w = 200)
+        {
+            name = name.Replace(" ", "_").Replace("-", "_").Replace(".", "_");
+            if (ControlExists(name, page))
+            {
+                MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
+                return;
+            }
+
+            var controlLines = new List<string>
+    {
+        $"    Name = \"{name}\",",
+        $"    Location = new Point({x}, {y}),",
+        $"    Size = new Size({w}, {h}),",
+        $"    BorderColor = Color.Black,",
+        $"    SignalText = \"{name.Replace("Ctr","")}\",",
+        $"    SignalValue = \"udef\",",
+        $"    SourceName = \"{source}\"",
+
+    };
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "StringSignalView");
+        }
+        public static void AddSimpleButtonControl(string name, string text, string page, int x, int y, int h, int w)
         {
             name = name.Replace(" ", "_").Replace("-", "_").Replace(".", "_");
             if (!name.StartsWith("Ctr"))
@@ -277,26 +313,61 @@ namespace AmiumScripter.Core
                 return;
             }
 
-            var controlLines = AddStringSignalControlLines(name, source);
-            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
-            UpdateControlsCs(filePath, controlLines, name, "StringSignalView");
-        }
-        static List<string> AddStringSignalControlLines(string name, string source)
-        {
-            return new List<string>
+            var controlLines = new List<string>
     {
         $"    Name = \"{name}\",",
-        $"    Location = new Point(10, 10),",
-        $"    Size = new Size(200, 100),",
+        $"    Location = new Point({x}, {y}),",
+        $"    Size = new Size({w}, {h}),",
         $"    BorderColor = Color.Black,",
         $"    SignalText = \"{name.Replace("Ctr","")}\",",
-        $"    SignalValue = \"udef\",",
-        $"    SourceName = \"{source}\"",
-
+        $"    SignalValue = \"{text}\",",
     };
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "SimpleButton");
+        }
+        public static void AddIconButtonControl(string name, string text, string page, int x, int y, int h, int w)
+        {
+            name = name.Replace(" ", "_").Replace("-", "_").Replace(".", "_");
+        
+
+            if (ControlExists(name, page))
+            {
+                MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
+                return;
+            }
+
+            var controlLines = new List<string>
+    {
+        $"    Name = \"{name}\",",
+        $"    Location = new Point({x}, {y}),",
+        $"    Size = new Size({w}, {h}),",
+        $"    BorderColor = Color.Black,",
+        $"    ButtonText = \"{text}\",",
+    };
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "IconButton");
         }
 
-        // SignalControl End-----
+
+        public static void AddChart(string name, string text, string page, int x, int y, int h, int w)
+        {
+
+            if (ControlExists(name, page))
+            {
+                MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
+                return;
+            }
+
+            var controlLines = new List<string>
+    {
+        $"    Name = \"{name}\",",
+        $"    Location = new Point({x}, {y}),",
+        $"    Size = new Size({w}, {h}),",
+        $"    BorderColor = Color.Black,",
+    };
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            UpdateControlsCs(filePath, controlLines, name, "Chart");
+        }
 
         public static void UpdateControlPosition(string page, string controlName, string controlType, int x, int y)
         {
@@ -346,6 +417,61 @@ namespace AmiumScripter.Core
                     }
 
                     //// Blockende erreicht
+                    if (property.Contains("}"))
+                    {
+                        insideTargetBlock = false;
+                        continue;
+                    }
+                }
+                else
+                {
+                    output.Add(line);
+                }
+            }
+
+            File.WriteAllLines(filePath, output);
+        }
+
+        public static void UpdateControlSize(string page, string controlName, string controlType, int width, int height)
+        {
+            Debug.WriteLine("Update Control Size " + controlName);
+            Debug.WriteLine("Type " + controlType);
+            Debug.WriteLine("W " + width);
+            Debug.WriteLine("H " + height);
+
+            var filePath = Path.Combine(ProjectManager.Project.Workspace, "Pages", page, "Controls.cs");
+            if (!File.Exists(filePath))
+            {
+                Debug.WriteLine("File not found");
+                return;
+            }
+
+            var lines = File.ReadAllLines(filePath).ToList();
+            var output = new List<string>();
+
+            bool insideTargetBlock = false;
+
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+
+                if (!insideTargetBlock && trimmed.StartsWith($"{controlName} = new {controlType}"))
+                {
+                    insideTargetBlock = true;
+                }
+
+                if (insideTargetBlock)
+                {
+                    string property = line.Replace(" ", "");
+                    if (property.StartsWith("Size"))
+                    {
+                        output.Add($"                    Size = new Size({width}, {height}),");
+                    }
+                    else
+                    {
+                        output.Add(line);
+                    }
+
                     if (property.Contains("}"))
                     {
                         insideTargetBlock = false;

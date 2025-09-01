@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -22,7 +23,6 @@ namespace AmiumScripter.Core
     public class ProjectLoadContext : AssemblyLoadContext
     {
         public ProjectLoadContext() : base(isCollectible: true) { }
-
         protected override Assembly Load(AssemblyName assemblyName)
         {
             // Optional: eigene Logik für Abhängigkeiten
@@ -43,7 +43,7 @@ namespace AmiumScripter.Core
         public string Uri { get; set; }
         public string Workspace { get; set; }
         public DateTime Erstellt { get; set; }
-
+        [JsonIgnore]
         public List<ModuleData> Modules { get; set; } = new();
         public List<string> Pages { get; set; } = new();  // ✅ hier
 
@@ -58,13 +58,12 @@ namespace AmiumScripter.Core
     public static class ProjectManager
     {
         public static ProjectData Project;
-     //   public static Assembly? LoadedAssembly { get; set; }
 
         private static ProjectLoadContext? _loadedContext;
         public static Assembly? LoadedAssembly { get; private set; }
         public static string? LastProjectName { get; private set; }
-
         public static Dictionary<string, IPage> Pages { get; set; } = new();
+
         public static Dictionary<string, BaseView> Views = new();
         public static string GetProjectPath(string projectName)
         {
@@ -105,7 +104,7 @@ namespace AmiumScripter.Core
 
 }";
             string path = Path.Combine(Path.GetTempPath(), "Project_" + projectName + "_" + Guid.NewGuid());
-            Logger.InfoMsg($"[ProjectManager] Workspace '{path}'");
+          //  Logger.InfoMsg($"[ProjectManager] Workspace '{path}'");
             Directory.CreateDirectory(path);
 
           //  string path = GetProjectPath(projectName);
@@ -149,9 +148,8 @@ namespace AmiumScripter.Shared.Classes
 
             SaveProject(Project);
             ProjectBuilder.GenerateDynamicProjectFile(path, projectName);
-            MessageBox.Show($"📁 Projekt '{projectName}' mit Referenzen angelegt: {path}");
+            Logger.InfoMsg($"[ProjectManager]  Project '{projectName}' created: {path}");
         }
- 
         public static ProjectData? LoadProject(string projectName)
         {
             string path = Path.Combine(GetProjectPath(projectName), "project.json");
@@ -182,11 +180,10 @@ namespace AmiumScripter.Shared.Classes
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Failed to add dlls: {ex.Message}");
+                    Logger.FatalMsg($"[ProjectManager] Failed to add dlls: {ex.Message}");
                 }
             }
         }
-
         public static void LoadFromAScript()
         {
             using var dialog = new OpenFileDialog
@@ -207,11 +204,12 @@ namespace AmiumScripter.Shared.Classes
                 try
                 {
                     ZipFile.ExtractToDirectory(dialog.FileName, tempDir);
-
-
                     string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "csharp.code-snippets");
                     string targetPath = Path.Combine(Path.Combine(tempDir, ".vscode"), "csharp.code-snippets");
                     File.Copy(sourcePath, targetPath, overwrite: true);
+
+                    //Project.Uri = dialog.FileName;
+                    //Project.Workspace = tempDir;
 
                     string projectJson = Path.Combine(tempDir, "project.json");
                     if (File.Exists(projectJson))
@@ -219,7 +217,7 @@ namespace AmiumScripter.Shared.Classes
                         var project = JsonSerializer.Deserialize<ProjectData>(File.ReadAllText(projectJson));
                         Project = project;
                         Project.Workspace = tempDir; // Setze Workspace auf tempDir
-                        MessageBox.Show($"Projekt geladen: {Project.Name}");
+                    //    MessageBox.Show($"Projekt geladen: {Project.Name}");
                     }
                     else
                     {
@@ -230,29 +228,27 @@ namespace AmiumScripter.Shared.Classes
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Fehler beim Entpacken: {ex.Message}");
+                    Logger.FatalMsg($"[ProjectManager] ZIP failed : {ex.Message}");
                 }
             }
         }
         public static void SaveProject(ProjectData project)
         {
-           // string path = GetProjectPath(project.Name);
-
-           string path = project.Workspace;
-
+            string path = project.Workspace;
             Directory.CreateDirectory(path);
-
             string jsonPath = Path.Combine(path, "project.json");
             string json = JsonSerializer.Serialize(project, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(jsonPath, json);
             SignalStorageSerializer.SaveToJson();
         }
-
-        public static void SaveAs()
+        public static void SaveAs(string newName = null)
         {
+            if(newName != null)
+                CreateProject(newName);
+
             if (Project == null)
             {
-                MessageBox.Show("Kein Projekt geladen.");
+                MessageBox.Show("No active project.");
                 return;
             }
 
@@ -261,7 +257,7 @@ namespace AmiumScripter.Shared.Classes
                 Filter = "Amium Script (*.AScript)|*.AScript",
                 DefaultExt = "AScript",
                 FileName = Project.Name + ".AScript",
-                Title = "Projekt speichern als"
+                Title = "Projekt save as"
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)
@@ -278,20 +274,19 @@ namespace AmiumScripter.Shared.Classes
 
                     ZipFile.CreateFromDirectory(projectPath, targetFile, CompressionLevel.Optimal, includeBaseDirectory: false);
 
-                    MessageBox.Show($"Projekt erfolgreich gespeichert: {targetFile}");
+                  //  MessageBox.Show($"Projekt erfolgreich gespeichert: {targetFile}");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Fehler beim Speichern: {ex.Message}");
+                    Logger.FatalMsg($"[ProjectManager] Save failed\r\n {ex.Message}");
                 }
             }
         }
-
         public static void Save()
         {
             if (Project == null || string.IsNullOrWhiteSpace(Project.Workspace) || string.IsNullOrWhiteSpace(Project.Uri))
             {
-                MessageBox.Show("Projekt, Workspace oder Zielpfad nicht gesetzt.");
+                Logger.FatalMsg("[ProjectManager] Workspace or path not found");
                 return;
             }
 
@@ -307,23 +302,27 @@ namespace AmiumScripter.Shared.Classes
                 // Workspace als ZIP speichern
                 ZipFile.CreateFromDirectory(Project.Workspace, Project.Uri, CompressionLevel.Optimal, includeBaseDirectory: false);
 
-                MessageBox.Show($"Projekt erfolgreich gespeichert: {Project.Uri}");
+                Logger.InfoMsg($"[ProjectManager] Projekt saved: {Project.Uri}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Fehler beim Speichern: {ex.Message}");
+                Logger.FatalMsg($"[ProjectManager] Fehler beim Speichern: {ex.Message}");
             }
         }
+
+        public static bool BuildSuccess = true;
 
         public static void BuildProject()
         {
             StopProject();
+            BuildSuccess = true;
 
             ProjectBuilder.GenerateDynamicProjectFile(Project.Workspace, Project.Name);
 
             if (!ProjectBuilder.BuildAssembly(ProjectManager.Project.Workspace))
             {
                 MessageBox.Show("❌ Build failed");
+                BuildSuccess = false;
                 return;
             }
             var assembly = LoadedAssembly;
@@ -332,11 +331,13 @@ namespace AmiumScripter.Shared.Classes
             if (assembly == null)
             {
                 MessageBox.Show("❌ Assembly ist null");
+                BuildSuccess = false;
                 return;
             }
             if (projectType == null)
             {
                 MessageBox.Show("❌ Project-Typ nicht gefunden");
+                BuildSuccess = false;
                 return;
             }
             GetProjectType().GetMethod("AddPagesViews", BindingFlags.Public | BindingFlags.Static)?.Invoke(null, null);
@@ -346,17 +347,25 @@ namespace AmiumScripter.Shared.Classes
 
             UIEditor.PageView = Views;
             UIEditor.AttachPagesViewToUI();
-
             Logger.DebugMsg("[ProjectManager] BuildProject()");
+            IsRunning = false;
 
         }
+
+        public static bool IsRunning = false;
         public static void RunProject()
         {
+            if (IsRunning) return;
+
             var assembly = LoadedAssembly;
             var projectType = assembly.GetType("AmiumScripter.Project");
+
             projectType.GetMethod("Run", BindingFlags.Public | BindingFlags.Static)?.Invoke(null, null);
             Logger.DebugMsg("[ProjectManager] RunProject()");
+            IsRunning = true;
         }
+
+      
         public static void StopProject()
         {
             Logger.DebugMsg("[ProjectManager] StopProject()");
@@ -369,11 +378,12 @@ namespace AmiumScripter.Shared.Classes
             ClassRuntimeManager.ClearAll();
             ClientManager.DestroyAll();
             UIEditor.Reset();
-            PageManager.Pages?.Clear();
+            //PageManager.Pages?.Clear();
             UIEditor.PageView?.Clear();
 
             UnloadProject();
             Logger.DebugMsg("[ProjectManager] Project stopped");
+          
         }
         public static void OpenEditor()
         {
@@ -417,19 +427,16 @@ namespace AmiumScripter.Shared.Classes
          //   Process.Start(codeExe, $"--new-window \"{workspacePath}\"");
             Process.Start(codeExe, args);
         }
-
-
-
         static void GetPagesFormAssembly()
         {
             Pages.Clear();
-            Logger.DebugMsg("[ProjectManager] Get Pages");
+        //    Logger.DebugMsg("[ProjectManager] Get Pages");
             var assembly = LoadedAssembly;
 
 
             var projectType = assembly.GetType("AmiumScripter.Project");
             var pagesDict = projectType.GetField("Pages", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as IDictionary;
-            Logger.DebugMsg("[ProjectManager] qty Pages " + pagesDict.Count);
+          //  Logger.DebugMsg("[ProjectManager] qty Pages " + pagesDict.Count);
 
 
             foreach (DictionaryEntry entry in pagesDict)
@@ -487,7 +494,25 @@ namespace AmiumScripter.Shared.Classes
         {
             return LoadedAssembly?.GetType("AmiumScripter.Project");
         }
+        public static void MovePage(string Page, int shift)
+        {
+        //    Debug.WriteLine("Move page " + Page);
+            int PageIndex = Project.Pages.IndexOf(Page);
+            int NewIndex = PageIndex + shift;
 
+            if (PageIndex < 0 || PageIndex >= Project.Pages.Count || NewIndex < 0 || NewIndex >= Project.Pages.Count)
+            {
+                Logger.WarningMsg("[ProjectManager] MovePage Failed");
+                return;
+            }
+
+            string element = Project.Pages[PageIndex];
+            Project.Pages.RemoveAt(PageIndex);
+            Project.Pages.Insert(NewIndex, element);
+
+            //foreach (string p in Project.Pages)
+            //    Debug.WriteLine(p);
+        }
 
     }
     public static class ProjectBuilder

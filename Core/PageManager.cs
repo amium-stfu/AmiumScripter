@@ -16,26 +16,21 @@ namespace AmiumScripter.Core
     public interface IPage
     {
         string Name { get; }
+        string Text { get; }
         void Initialize();
         void Run();
         void Destroy();
     }
 
-
-
-
     public static class PageManager
     {
         private static readonly List<IPage> LoadedPages = new();
-
-        public static Dictionary<string, IPage> Pages { get; set; } = new();
         public static void AddPage(string projectName, string pageName)
         {
             string pageRootPath = Path.Combine(ProjectManager.Project.Workspace, "Pages", pageName);
- 
-            string classesPath = Path.Combine(pageRootPath, "Classes");
-            string controlsPath = Path.Combine(pageRootPath, "Classes");
+            ProjectManager.Project.Pages.Add(pageName);
 
+            string classesPath = Path.Combine(pageRootPath, "Classes");
             string dummyClass = $@"
 namespace AmiumScripter.Pages.{pageName}.Classes
 {{
@@ -75,6 +70,8 @@ namespace AmiumScripter.Pages.{pageName}
     {{
         public string Name {{get;}}= ""{pageName}""; 
 
+        public string Text {{get;}}= ""{pageName}""; 
+
         public void Initialize()
             {{ 
                
@@ -102,10 +99,7 @@ namespace AmiumScripter.Pages.{pageName}
                 MessageBox.Show($"❌ Projektdatei '{projectPath}' existiert nicht.");
                 return;
             }
-            else
-            {
-                MessageBox.Show($"❌ Projektdatei '{projectPath}' existiert");
-            }
+         
 
             string json = File.ReadAllText(projectPath);
             if (string.IsNullOrWhiteSpace(json))
@@ -118,6 +112,7 @@ namespace AmiumScripter.Pages.{pageName}
             try
             {
                 project = JsonSerializer.Deserialize<ProjectData>(json);
+                project.Workspace = ProjectManager.Project.Workspace;
             }
             catch (JsonException ex)
             {
@@ -136,7 +131,7 @@ namespace AmiumScripter.Pages.{pageName}
 
             // Wenn noch nicht eingetragen: hinzufügen
             if (!project.Pages.Contains(pageCodeFile))
-                project.Pages.Add(pageCodeFile);
+                project.Pages.Add(pageName);
 
             json = JsonSerializer.Serialize(project, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(projectPath, json);
@@ -176,6 +171,7 @@ namespace AmiumScripter.Pages.{pageName}
         {{ 
             View.AddControls(this); 
             Logger.DebugMsg(""[PageView] {pageName} Initialize"");
+            PageText = ""{pageName}"";
         }}
 
         
@@ -229,7 +225,6 @@ namespace AmiumScripter.Pages.{pageName}
         }
         internal static void WriteProjectCs(string projectName)
         {
-            Pages.Clear();
             string ProjectPath = Path.Combine(ProjectManager.Project.Workspace, "Project.cs");
 
             var cPage = new List<string>();
@@ -237,8 +232,21 @@ namespace AmiumScripter.Pages.{pageName}
             var aPage = new List<string>();
             var vPage = new List<string>();
 
+
+            List<string> pages = new List<string>();
+
+                string pagesPath = Path.Combine(ProjectManager.Project.Workspace, "Pages");
+
+            if (Directory.Exists(pagesPath))
+            {
+                foreach (string dir in Directory.GetDirectories(pagesPath, "*", SearchOption.TopDirectoryOnly))
+                {
+                    pages.Add(Path.GetFileName(dir));
+                }
+            }
+
             // Für jeden Page-Dateinamen im Projekt
-            foreach (string pageFile in ProjectManager.Project.Pages)
+            foreach (string pageFile in pages)
             {
                 string pageName = Path.GetFileNameWithoutExtension(pageFile); // "TestPage"
                 string pageClass = $"Page_{pageName}";

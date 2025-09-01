@@ -1,0 +1,74 @@
+
+using AmiumScripter;
+using AmiumScripter.Core;
+using AmiumScripter.Shared;
+using AmiumScripter.NET;
+using AmiumScripter.Modules;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+
+
+namespace AmiumScripter.Shared
+{
+    public class MyAkCLient : AkClient
+    {
+        public StringSignal Mode;
+        public StringSignal State;
+
+        public Signal Dut1;
+        public Signal Dut2;
+       
+        public MyAkCLient(string name, string socket, int port, int timeout) : base(name, socket, port, timeout)
+        {
+            Mode = new StringSignal(name: $"{Name}Mode", text: "Mode", value: "Unknown");
+            State = new StringSignal(name: $"{Name}State", text: "State", value: "Unknown");
+            Dut1 = new Signal(name: $"{Name}Dut1", text: "NH3", unit: "ppm", format: "0.00");
+            Dut2 = new Signal(name: $"{Name}Dut2", text: "abs. Pressure", unit: "mbar", format: "0.00");
+            AddReader(" AKON K0", 200);
+            AddReader(" ASTZ K0", 1000);
+        }
+
+        public override void Run()
+        {
+            base.Run();
+            Logger.DebugMsg($"[AkClient] {Name}: Run method called");
+        }
+
+        public override void Destroy()
+        {
+            base.Destroy();
+            Logger.DebugMsg($"[AkClient] {Name}: Destroy method called");
+        }
+
+        protected override void OnMessageReceived(AkMessage msg)
+        {
+            byte errors = msg.Error;
+            string raw = msg.Raw;
+            string cmd = msg.Command;
+            string channel = msg.Channel;
+            string[] parameters = msg.Parameters;
+            string reader = msg.Reader;
+
+            Logger.DebugMsg($"[MyAkClient] {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} OnMessageReceived:{msg.Command} {msg.Channel} -> '{raw}'");
+
+            if (msg.Reader == " ASTZ K0") Mode.Value = GetReaderResponse(msg.Reader, 0);
+            if (msg.Reader == " ASTZ K0") State.Value = GetReaderResponse(msg.Reader, 1);
+            if (msg.Reader == " AKON K0") Dut1.Value = GetReaderResponseDouble(msg.Reader, 0);
+            if (msg.Reader == " AKON K0") Dut2.Value = GetReaderResponseDouble(msg.Reader, 1);
+
+            // PushSignal(new Signal(name: "dut1", text: "Dut 1", unit: "ppm", format: "0.00", value: GetReaderResponseDouble(" AKON K0", index: 0)), direct: true);
+            // PushSignal(new Signal(name: "dut2", text: "Dut 2", unit: "mbar", format: "0.00", value: GetReaderResponseDouble(" AKON K0", index: 1)), direct: true);
+            // PushSignal(new StringSignal(name: "state", text: "State", value: GetReaderResponse(" ASTZ K0", 1)), direct: true);
+            // PushSignal(new StringSignal(name: "access", text: "Access", value: GetReaderResponse(" ASTZ K0", 0)), direct: true);
+        }
+
+    }
+}

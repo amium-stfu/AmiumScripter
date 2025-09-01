@@ -1,0 +1,72 @@
+
+using AmiumScripter;
+using AmiumScripter.Core;
+using AmiumScripter.Shared;
+using AmiumScripter.Simulation;
+using AmiumScripter.Modules;
+using AmiumScripter.NET;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+
+
+namespace AmiumScripter.Shared
+{
+    public class MyAkServer : AKServer
+    {
+        DemoSignal Dut1;
+        DemoSignal Dut2;
+
+        string Mode { get; set; } = "SMAN";
+        string State { get; set; } = "STBY";
+
+        public MyAkServer(string name, int port, int timeout) : base(name, port, timeout)
+        {
+            // Optional: Initialisierungscode
+            Logger.DebugMsg($"[AKServer] {Name} Initialized");
+            Dut1 = new DemoSignal(name: "dut1", text: "Dut 1", unit: "ppm");
+            Dut2 = new DemoSignal(name: "dut2", text: "Dut 2", unit: "mbar");
+
+            Dut1.NoiseStrength = 1;
+            Dut2.NoiseStrength = 0.2;
+            Dut1.Set.Value = 200;
+            Dut2.Set.Value = 1013.25;
+        }
+
+        public override void Run()
+        {
+            base.Run();
+            Logger.DebugMsg($"[AKServer] {Name} Run method called");
+        }
+
+        public override void Destroy()
+        {
+            base.Destroy();
+            Logger.DebugMsg($"[AKServer] {Name} Destroyed");
+        }
+
+        protected override string OnMessageReceived(AkMessage msg)
+        {
+            string payload = "NA";
+
+            if (msg.Command == "ASTZ")
+            {
+                return  $"{Mode} {State}";
+            }
+            if (msg.Command == "AKON")
+            {
+                return $"{Dut1.Value} {Dut2.Value}";
+            }
+
+            return payload;
+
+        }
+    }
+}

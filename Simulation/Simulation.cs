@@ -10,19 +10,38 @@ namespace AmiumScripter.Simulation
     public class DemoSignal : Module
     {
         // Set-/Ist-Werte (Tau wirkt als Zeitkonstante in Sekunden)
-        public double TauSet { get; set; } = 0.1;
-        public double Tau => TauSet; // falls später Filter zwischen Soll/Ist nötig -> hier anpassen
+        private double _tau = 0.1;
+        public double Tau
+        {
+            get { lock (_lock) return _tau; }
+            set
+            {
+                lock (_lock)
+                {
+                    if (double.IsNaN(value) || value <= 0) value = 1e-3;
+                    _tau = value;
+                }
+            }
+        }
 
         // Update-Periode (ms) für den Simulations-Thread
         public int UpdateRateMs { get; set; } = 100;
 
         // Rauschparameter
-        public double NoiseStrengthSet { get; set; } = 0.0;    // max. Amplitude Faktor
-        public double NoiseStrength => NoiseStrengthSet;
+        private double _noiseStrength = 0.0;
+        public double NoiseStrength
+        {
+            get { lock (_lock) return _noiseStrength; }
+            set { lock (_lock) _noiseStrength = value < 0 ? 0 : value; }
+        }
 
         // Noise-Frequenz: alle N Updates neuer Noise-Wert
-        public int NoiseFrequencySet { get; set; } = 1;
-        public int NoiseFrequency => NoiseFrequencySet;
+        private int _noiseFrequency = 1;
+        public int NoiseFrequency
+        {
+            get { lock (_lock) return _noiseFrequency; }
+            set { lock (_lock) _noiseFrequency = value < 1 ? 1 : value; }
+        }
 
         // Aktueller Noise-Wert
         public double Noise { get; private set; } = 0.0;
@@ -52,10 +71,9 @@ namespace AmiumScripter.Simulation
             Set.Value = 0;
             Out.Value = 0;
 
-            // Default-Parameter
-            TauSet = 0.1;
-            NoiseStrengthSet = 0.0;
-            NoiseFrequencySet = 1;
+            _tau = 0.1;
+            _noiseStrength = 0.0;
+            _noiseFrequency = 1;
 
             _sw.Start();
             _lastTime = _sw.Elapsed.TotalSeconds;
@@ -91,9 +109,9 @@ namespace AmiumScripter.Simulation
         {
             // Eingaben prüfen
             double set = Set.Value;
-            double tau = TauSet;
-            if (tau <= 1e-9 || double.IsNaN(tau) || double.IsInfinity(tau))
-                tau = 1e-3;
+            double tau;
+            lock (_lock) tau = _tau;
+            if (tau <= 1e-9) tau = 1e-3;
 
             if (double.IsNaN(set) || double.IsInfinity(set))
                 set = _lastGoodValue;
@@ -102,7 +120,7 @@ namespace AmiumScripter.Simulation
             // alpha in (0..1), für kleine dt/tau ≈ dt / tau
             double alpha = 1 - Math.Exp(-dt / tau);
             if (alpha < 0) alpha = 0;
-            if (alpha > 1) alpha = 1;
+            else if (alpha > 1) alpha = 1;
 
             double newVal = Value + alpha * (set - Value) + Noise;
 
@@ -118,24 +136,30 @@ namespace AmiumScripter.Simulation
             }
         }
 
+        private static readonly ThreadLocal<Random> _rnd = new(() => new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId)));
+
         private void StepNoise()
         {
-            int nf = NoiseFrequency;
+            int nf;
+            double ns;
+            lock (_lock)
+            {
+                nf = _noiseFrequency;
+                ns = _noiseStrength;
+            }
             if (nf < 1) nf = 1;
 
             _noiseCounter++;
             if (_noiseCounter >= nf)
             {
                 _noiseCounter = 0;
-                var r = new Random();
-                // Rauschgrundwert (-1 .. 1) * Stärke + Peak
-                double baseNoise = (r.NextDouble() * 2 - 1) * NoiseStrength + _noisePeak;
+                var r = _rnd.Value;
+                double baseNoise = (r.NextDouble() * 2 - 1) * ns + _noisePeak;
                 Noise = baseNoise;
                 _noisePeak = 0;
             }
             else
             {
-                // Nur Peak (falls gesetzt), danach zurücksetzen
                 Noise = _noisePeak;
                 _noisePeak = 0;
             }
@@ -143,9 +167,10 @@ namespace AmiumScripter.Simulation
 
         public void AddPeak(int min = -500, int max = 500)
         {
+            if (min > max) (min, max) = (max, min);
+            var r = _rnd.Value;
             lock (_lock)
             {
-                var r = new Random();
                 _noisePeak = r.Next(min, max + 1);
             }
         }

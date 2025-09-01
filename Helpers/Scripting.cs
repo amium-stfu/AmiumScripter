@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace AmiumScripter.Helpers
 {
@@ -33,6 +34,18 @@ namespace AmiumScripter.Helpers
 
             string rootlessPath = uri.Substring(root.Length).Replace(Path.DirectorySeparatorChar, '\\');
             return $@"\\{computerName}\{rootlessPath}";
+        }
+
+        public static string RemoveInvalidChars(string value)
+        {
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char ch in invalidChars)
+            {
+                value = value.Replace(ch.ToString(), "_");
+            }
+            value = value.Replace(" ", "_");
+
+            return value;
         }
     }
 
@@ -121,6 +134,7 @@ namespace AmiumScripter.Helpers
             ))
             {
                 keyboard.Qertz();
+                keyboard.ShowNumblock();
  
                 if (keyboard.ShowDialog() == DialogResult.OK)
                 {

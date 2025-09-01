@@ -101,15 +101,15 @@ namespace {nameSpace}
             string filePath = Path.Combine(classPath, className + ".cs");
             File.WriteAllText(filePath, classCode);
 
-            ProjectManager.Project.Modules.Add(new ModuleData
-            {
-                Name = className,
-                Enabled = true
-            });
-            ProjectManager.SaveProject(ProjectManager.Project);
+            //ProjectManager.Project.Modules.Add(new ModuleData
+            //{
+            //    Name = className,
+            //    Enabled = true
+            //});
+            //ProjectManager.SaveProject(ProjectManager.Project);
 
 
-            MessageBox.Show($"✅ Modul '{className}' wurde im Projekt '{projectName}' erstellt.");
+    //        MessageBox.Show($"✅ Modul '{className}' wurde im Projekt '{projectName}' erstellt.");
         }
 
         public static string[] ListClasses(string projectName)
