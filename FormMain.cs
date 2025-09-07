@@ -147,7 +147,7 @@ namespace AmiumScripter
             ProjectManager.BuildProject();
             if (ProjectManager.BuildSuccess)
             {
-              
+
                 OnOpenProject();
                 this.ActiveControl = null;
             }
@@ -157,7 +157,7 @@ namespace AmiumScripter
         {
             ProjectManager.RunProject();
             this.ActiveControl = null;
-           
+
         }
 
         private void btnStop_Click(object sender, EventArgs e)
@@ -168,13 +168,7 @@ namespace AmiumScripter
             this.ActiveControl = null;
         }
 
-        private void btnEdit_Click(object sender, EventArgs e)
-        {
-            FormCodeEditor editor = new FormCodeEditor();
-            editor.Show();
-            string uri = ProjectManager.GetProjectPath(ProjectManager.Project.Name);
-            this.ActiveControl = null;
-        }
+      
 
         private void btnLoad_Click(object sender, EventArgs e)
         {
@@ -253,7 +247,7 @@ namespace AmiumScripter
             }
         }
 
-   
+
 
         private void iconButton1_Click(object sender, EventArgs e)
         {
@@ -342,7 +336,7 @@ namespace AmiumScripter
             {
                 ProjectManager.LoadFromAScript();
                 ProjectManager.BuildProject();
-                
+
                 AmiumScripter.Root.Main.OnOpenProject();
                 ProjectManager.RunProject();
             }
@@ -388,6 +382,13 @@ namespace AmiumScripter
                     ProjectManager.SaveAs(name);
                 }
             }
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            CodeEditorForm Code = new CodeEditorForm();
+            Code.Show();
 
         }
     }

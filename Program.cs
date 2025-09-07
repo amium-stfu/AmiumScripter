@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography.X509Certificates;
 using static AmiumScripter.Logger;
+using Microsoft.Build.Locator;
 
 
 
@@ -114,6 +115,9 @@ namespace AmiumScripter
         [STAThread]
         public static void Main()
         {
+            if (!Microsoft.Build.Locator.MSBuildLocator.IsRegistered)
+                Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
+
             Debug.WriteLine("Cleaning up temp folders...");
             Cleanup.DeleteProjectTempFolders();
             Debug.WriteLine("Cleanup complete.");
