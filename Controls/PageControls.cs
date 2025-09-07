@@ -1018,7 +1018,8 @@ namespace AmiumScripter.Controls
             if (_recorder.Realtime)
             {
                 g.DrawImage(Icons.GetFaIcon("play", 23, Color.Orange), iconPlayRect);
-                g.DrawImage(Icons.GetFaIcon("pause", 23, Color.Black), iconPauseRect);
+                //g.DrawImage(Icons.GetFaIcon("pause", 23, Color.Black), iconPauseRect);
+                g.DrawImage(IconChar.Pause.ToBitmap(Color.Black, 23, 0), iconPauseRect);
             }
             else
             {

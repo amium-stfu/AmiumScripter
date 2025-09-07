@@ -25,6 +25,13 @@ namespace AmiumScripter
             //ProjectManager.OnRunProject = () => UpdateProjectButtons();
             //ProjectManager.OnStopProject = () => UpdateProjectButtons();
 
+            btnAddClass.Visible = UIEditor.EditMode;
+            btnAddPage.Visible = UIEditor.EditMode;
+            btnAddDll.Visible = UIEditor.EditMode;
+            btnPageDown.Visible = UIEditor.EditMode;
+            btnPageUp.Visible = UIEditor.EditMode;
+            btnRemovePage.Visible = UIEditor.EditMode;
+
         }
 
         int dummyPageCounter = 0;
@@ -271,6 +278,14 @@ namespace AmiumScripter
 
             btnEditView.BackColor = UIEditor.EditMode ? Color.Orange : Color.White;
             this.ActiveControl = null;
+
+            btnAddClass.Visible = UIEditor.EditMode;
+            btnAddPage.Visible = UIEditor.EditMode;
+            btnAddDll.Visible = UIEditor.EditMode;
+            btnPageDown.Visible = UIEditor.EditMode;
+            btnPageUp.Visible = UIEditor.EditMode;
+            btnRemovePage.Visible = UIEditor.EditMode;
+
 
 
         }

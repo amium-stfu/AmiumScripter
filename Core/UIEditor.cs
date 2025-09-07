@@ -1,5 +1,6 @@
 ﻿using AmiumScripter.Modules;
 using Microsoft.CodeAnalysis;
+using AmiumScripter.Controls;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
@@ -237,6 +238,20 @@ namespace AmiumScripter.Core
                 return;
             }
 
+            PageView[page].Controls.Add(
+                new SignalView()
+                {
+                    Name = name,
+                    Location = new Point(x, y),
+                    Size = new Size(w, h),
+                    BorderColor = Color.Black,
+                    SignalText = name,
+                    SignalUnit = "udef",
+                    SignalValue = "udef",
+                    SourceName = source
+                }
+                );
+
             var controlLines = new List<string>
     {
 
@@ -261,6 +276,21 @@ namespace AmiumScripter.Core
                 MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
                 return;
             }
+
+            PageView[page].Controls.Add(
+              new ModuleView()
+              {
+                  Name = name,
+                  Location = new Point(x, y),
+                  Size = new Size(w, h),
+                  BorderColor = Color.Black,
+                  SignalText = name,
+                  SignalUnit = "udef",
+                  SignalValue = "udef",
+                  SourceName = source
+              }
+              );
+
 
             var controlLines = new List<string>
     {
@@ -287,6 +317,19 @@ namespace AmiumScripter.Core
                 return;
             }
 
+            PageView[page].Controls.Add(
+              new StringSignalView()
+              {
+                  Name = name,
+                  Location = new Point(x, y),
+                  Size = new Size(w, h),
+                  BorderColor = Color.Black,
+                  SignalText = name,
+                  SignalValue = "udef",
+                  SourceName = source
+              }
+              );
+
             var controlLines = new List<string>
     {
         $"    Name = \"{name}\",",
@@ -303,15 +346,24 @@ namespace AmiumScripter.Core
         }
         public static void AddSimpleButtonControl(string name, string text, string page, int x, int y, int h, int w)
         {
-            name = name.Replace(" ", "_").Replace("-", "_").Replace(".", "_");
-            if (!name.StartsWith("Ctr"))
-                name = "Ctr" + name;
 
             if (ControlExists(name, page))
             {
                 MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
                 return;
             }
+
+            PageView[page].Controls.Add(
+              new SimpleButton()
+              {
+                  Name = name,
+                  Location = new Point(x, y),
+                  Size = new Size(w, h),
+                  BorderColor = Color.Black,
+                  SignalText = name,
+                  SignalValue = "udef"
+              }
+              );
 
             var controlLines = new List<string>
     {
@@ -336,6 +388,16 @@ namespace AmiumScripter.Core
                 return;
             }
 
+            PageView[page].Controls.Add(
+              new IconButton()
+              {
+                  Name = name,
+                  Location = new Point(x, y),
+                  Size = new Size(w, h),
+                  BorderColor = Color.Black,
+              }
+              );
+
             var controlLines = new List<string>
     {
         $"    Name = \"{name}\",",
@@ -357,6 +419,16 @@ namespace AmiumScripter.Core
                 MessageBox.Show($"❌ A control with the name '{name}' already exists in the file {page}/Controls.cs");
                 return;
             }
+
+            PageView[page].Controls.Add(
+              new Chart()
+              {
+                  Name = name,
+                  Location = new Point(x, y),
+                  Size = new Size(w, h),
+                  BorderColor = Color.Black,
+              }
+              );
 
             var controlLines = new List<string>
     {

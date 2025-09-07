@@ -180,6 +180,7 @@ namespace AmiumScripter.Modules
 
     public class StringSignal : BaseSignalString
     {
+        [JsonIgnore]
         public Action OnUpdate = null;
         
         private string _value;

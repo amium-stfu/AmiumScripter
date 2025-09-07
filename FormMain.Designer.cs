@@ -54,7 +54,7 @@
             panel5 = new Panel();
             btnPageDown = new FontAwesome.Sharp.IconButton();
             btnPageUp = new FontAwesome.Sharp.IconButton();
-            binRemovePage = new FontAwesome.Sharp.IconButton();
+            btnRemovePage = new FontAwesome.Sharp.IconButton();
             btnAddPage = new FontAwesome.Sharp.IconButton();
             toolTip1 = new ToolTip(components);
             iconToolStripButton1 = new FontAwesome.Sharp.IconToolStripButton();
@@ -412,7 +412,7 @@
             // 
             panel5.Controls.Add(btnPageDown);
             panel5.Controls.Add(btnPageUp);
-            panel5.Controls.Add(binRemovePage);
+            panel5.Controls.Add(btnRemovePage);
             panel5.Controls.Add(btnAddPage);
             panel5.Dock = DockStyle.Fill;
             panel5.Location = new Point(934, 601);
@@ -454,22 +454,21 @@
             btnPageUp.UseVisualStyleBackColor = false;
             btnPageUp.Click += btnPageUp_Click;
             // 
-            // binRemovePage
+            // btnRemovePage
             // 
-            binRemovePage.CausesValidation = false;
-            binRemovePage.FlatAppearance.BorderColor = Color.White;
-            binRemovePage.FlatStyle = FlatStyle.Flat;
-            binRemovePage.IconChar = FontAwesome.Sharp.IconChar.FileCircleMinus;
-            binRemovePage.IconColor = Color.Black;
-            binRemovePage.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            binRemovePage.IconSize = 32;
-            binRemovePage.Location = new Point(284, 0);
-            binRemovePage.Name = "binRemovePage";
-            binRemovePage.Size = new Size(39, 34);
-            binRemovePage.TabIndex = 3;
-            toolTip1.SetToolTip(binRemovePage, "Remove Page");
-            binRemovePage.UseVisualStyleBackColor = false;
-            binRemovePage.Click += btnAddProject_Click;
+            btnRemovePage.CausesValidation = false;
+            btnRemovePage.FlatAppearance.BorderColor = Color.White;
+            btnRemovePage.FlatStyle = FlatStyle.Flat;
+            btnRemovePage.IconChar = FontAwesome.Sharp.IconChar.FileCircleMinus;
+            btnRemovePage.IconColor = Color.Black;
+            btnRemovePage.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            btnRemovePage.IconSize = 32;
+            btnRemovePage.Location = new Point(284, 0);
+            btnRemovePage.Name = "btnRemovePage";
+            btnRemovePage.Size = new Size(39, 34);
+            btnRemovePage.TabIndex = 3;
+            toolTip1.SetToolTip(btnRemovePage, "Remove Page");
+            btnRemovePage.UseVisualStyleBackColor = false;
             // 
             // btnAddPage
             // 
@@ -554,7 +553,7 @@
         private Label label4;
         private Label lblPage;
         private Panel panel5;
-        private FontAwesome.Sharp.IconButton binRemovePage;
+        private FontAwesome.Sharp.IconButton btnRemovePage;
         private FontAwesome.Sharp.IconButton btnAddPage;
         private FontAwesome.Sharp.IconButton btnPageDown;
         private FontAwesome.Sharp.IconButton btnPageUp;
