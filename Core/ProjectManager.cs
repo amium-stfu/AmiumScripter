@@ -528,10 +528,10 @@ namespace AmiumScripter.Shared.Classes
         }
         public static string GenerateCsprojWithAbsolutePaths()
         {
-            string projectDlls = Path.Combine(ProjectManager.Project.Workspace, "dlls");
+            string projectRoot = ProjectManager.Project.Workspace;
+            string projectDlls = Path.Combine(projectRoot, "dlls");
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
-            // Alle DLL-Dateien aus beiden Verzeichnissen holen
             var dllFiles = Directory.GetFiles(baseDir, "*.dll")
                 .Concat(Directory.Exists(projectDlls) ? Directory.GetFiles(projectDlls, "*.dll") : Array.Empty<string>())
                 .ToArray();
@@ -553,18 +553,33 @@ namespace AmiumScripter.Shared.Classes
     </Reference>";
                 });
 
+            // WICHTIG: Alle C#-Dateien wie in deinem Build einbinden
+            // (wildcards decken Unterordner ab)
+            var compileItems = $@"
+    <Compile Include=""project.cs"" />
+    <Compile Include=""Shared\SignalPool.cs"" />
+    <Compile Include=""Shared\Classes\**\*.cs"" />
+    <Compile Include=""Pages\**\*.cs"" />";
+
             return $@"
 <Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
+
+  <ItemGroup>
+{compileItems}
+  </ItemGroup>
+
   <ItemGroup>
 {string.Join("\n", referenceItems)}
   </ItemGroup>
 </Project>";
         }
+
 
         private static bool _assemblyResolveRegistered = false;
         public static bool BuildAssembly(string projectPath)

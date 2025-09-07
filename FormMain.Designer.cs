@@ -58,6 +58,7 @@
             btnAddPage = new FontAwesome.Sharp.IconButton();
             toolTip1 = new ToolTip(components);
             iconToolStripButton1 = new FontAwesome.Sharp.IconToolStripButton();
+            button1 = new Button();
             PanelRoot.SuspendLayout();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -138,6 +139,7 @@
             // 
             // panel4
             // 
+            panel4.Controls.Add(button1);
             panel4.Controls.Add(btnAddClass);
             panel4.Controls.Add(btnAddDll);
             panel4.Controls.Add(label2);
@@ -505,6 +507,17 @@
             iconToolStripButton1.Size = new Size(23, 23);
             iconToolStripButton1.Text = "iconToolStripButton1";
             // 
+            // button1
+            // 
+            button1.Dock = DockStyle.Bottom;
+            button1.Location = new Point(0, 569);
+            button1.Name = "button1";
+            button1.Size = new Size(39, 23);
+            button1.TabIndex = 9;
+            button1.Text = "button1";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -558,5 +571,6 @@
         private FontAwesome.Sharp.IconButton btnPageDown;
         private FontAwesome.Sharp.IconButton btnPageUp;
         private FontAwesome.Sharp.IconToolStripButton iconToolStripButton1;
+        private Button button1;
     }
 }
