@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace AmiumScripter.Controls
 {
-
+ 
     public class ControlItem
     {
         public string Name { get; set; }

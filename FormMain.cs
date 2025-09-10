@@ -175,7 +175,29 @@ namespace AmiumScripter
             this.ActiveControl = null;
         }
 
-      
+        public void ClearPagesFromUI()
+        {
+            panelPages.Controls.Clear();
+        }
+
+        public void RemovePageFromUI(string pageName)
+        {
+            UserControlPage? pageToRemove = null;
+            foreach (UserControlPage page in panelPages.Controls)
+            {
+                if (page.PageText == pageName)
+                {
+                    pageToRemove = page;
+                    break;
+                }
+            }
+            if (pageToRemove != null)
+            {
+                panelPages.Controls.Remove(pageToRemove);
+                pageToRemove.Dispose();
+            }
+        }
+
 
         private void btnLoad_Click(object sender, EventArgs e)
         {

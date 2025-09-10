@@ -1,5 +1,4 @@
-﻿
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections;
@@ -61,6 +60,7 @@ namespace AmiumScripter.Core
 
         private static ProjectLoadContext? _loadedContext;
         public static Assembly? LoadedAssembly { get; private set; }
+        public static byte[]? LoadedAssemblyBytes { get; private set; }
         public static string? LastProjectName { get; private set; }
         public static Dictionary<string, IPage> Pages { get; set; } = new();
 
@@ -461,6 +461,7 @@ namespace AmiumScripter.Shared.Classes
             _loadedContext = new ProjectLoadContext();
             try
             {
+                LoadedAssemblyBytes = assemblyBytes;
                 using var ms = new MemoryStream(assemblyBytes);
                 LoadedAssembly = _loadedContext.LoadFromStream(ms);
                 LastProjectName = projectName;
@@ -484,6 +485,7 @@ namespace AmiumScripter.Shared.Classes
                 _loadedContext = null;
                 LoadedAssembly = null;
                 LastProjectName = null;
+                LoadedAssemblyBytes = null;
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -839,8 +841,6 @@ namespace AmiumScripter.Shared.Classes
 
             return code;
         }
-
-
 
 
 
